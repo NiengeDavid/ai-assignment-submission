@@ -1,13 +1,18 @@
-@import 'tailwindcss';
+@import "tailwindcss";
 @import "tw-animate-css";
 /*
   ---break---
 */
-@custom-variant dark (&:is(.dark *));
+
+/* Dark mode: */
+@custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-bg1: #1e1e1e;
+  --color-bg2: #353838;
+  --color-bg3: #00ff40;
 }
 
 /*
