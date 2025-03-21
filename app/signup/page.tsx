@@ -23,37 +23,46 @@ import {
 } from "@/components/ui/select";
 import Image from "next/image";
 import Link from "next/link";
+import { Eye, EyeOff } from "lucide-react"; // For eye icons
+import { Loader2 } from "lucide-react"; // For loading spinner
 
 const Bg = "/assets/bg.png";
 const SchoolLogo = "/assets/full-logo.png";
 
 // Combined Schema with all possible fields
-const formSchema = z.object({
-  // Step 1
-  fullName: z.string().min(1, "Full Name is required"),
-  email: z.string().email("Invalid email address"),
-  phoneNumber: z.string().min(1, "Phone Number is required"),
-  role: z.enum(["Student", "Teacher", "Admin"]),
+const formSchema = z
+  .object({
+    // Step 1
+    fullName: z.string().min(1, "Full Name is required"),
+    email: z.string().email("Invalid email address"),
+    phoneNumber: z.string().min(1, "Phone Number is required"),
+    role: z.enum(["Student", "Lecturer", "Admin"]),
 
-  // Step 2 Student
-  registrationNumber: z.string().optional(),
-  faculty: z.string().optional(),
-  department: z.string().optional(),
-  level: z.string().optional(),
+    // Step 2 Student
+    registrationNumber: z.string().optional(),
+    faculty: z.string().optional(),
+    department: z.string().optional(),
+    level: z.string().optional(),
 
-  // Step 2 Staff
-  idNumber: z.string().optional(),
+    // Step 2 Staff
+    idNumber: z.string().optional(),
 
-  // Step 3
-  password: z.string().optional(),
-  confirmPassword: z.string().optional(),
-});
+    // Step 3
+    password: z.string().optional(),
+    confirmPassword: z.string().optional(),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords do not match",
+    path: ["confirmPassword"],
+  });
 
 export default function SignUpPage() {
   const [step, setStep] = useState(1);
-  const [role, setRole] = useState<"Student" | "Teacher" | "Admin" | null>(
+  const [role, setRole] = useState<"Student" | "Lecturer" | "Admin" | null>(
     null
   );
+  const [showPassword, setShowPassword] = useState(false); // For password visibility
+  const [isSubmitting, setIsSubmitting] = useState(false); // For loading state
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -80,7 +89,7 @@ export default function SignUpPage() {
           fullName: z.string().min(1),
           email: z.string().email(),
           phoneNumber: z.string().min(1),
-          role: z.enum(["Student", "Teacher", "Admin"]),
+          role: z.enum(["Student", "Lecturer", "Admin"]),
         })
         .safeParse(data);
 
@@ -90,10 +99,12 @@ export default function SignUpPage() {
     if (step === 2 && role === "Student") {
       const result = z
         .object({
-          registrationNumber: z.string().min(1),
-          faculty: z.string().min(1),
-          department: z.string().min(1),
-          level: z.string().min(1),
+          registrationNumber: z
+            .string()
+            .min(1, "Registration Number is required"),
+          faculty: z.string().min(1, "Faculty is required"),
+          department: z.string().min(1, "Department is required"),
+          level: z.string().min(1, "Level is required"),
         })
         .safeParse(data);
 
@@ -103,8 +114,8 @@ export default function SignUpPage() {
     if (step === 2 && role !== "Student") {
       const result = z
         .object({
-          idNumber: z.string().min(1),
-          faculty: z.string().min(1),
+          idNumber: z.string().min(1, "ID Number is required"),
+          faculty: z.string().min(1, "Faculty is required"),
         })
         .safeParse(data);
 
@@ -114,8 +125,8 @@ export default function SignUpPage() {
     if (step === 3) {
       const result = z
         .object({
-          password: z.string().min(8),
-          confirmPassword: z.string().min(8),
+          password: z.string().min(8, "Password must be at least 8 characters"),
+          confirmPassword: z.string().min(8, "Confirm Password is required"),
         })
         .refine((data) => data.password === data.confirmPassword, {
           message: "Passwords don't match",
@@ -129,7 +140,7 @@ export default function SignUpPage() {
     return true;
   };
 
-  const onSubmit = (data: z.infer<typeof formSchema>) => {
+  const onSubmit = async (data: z.infer<typeof formSchema>) => {
     const validation = validateStep(data);
     if (validation !== true) return;
 
@@ -139,8 +150,11 @@ export default function SignUpPage() {
     } else if (step === 2) {
       setStep(3);
     } else if (step === 3) {
+      setIsSubmitting(true); // Start loading
       // Submit to Clerk
+      await new Promise((resolve) => setTimeout(resolve, 2000));
       console.log("Form Data:", data);
+      setIsSubmitting(false); // Stop loading
     }
   };
 
@@ -165,18 +179,21 @@ export default function SignUpPage() {
           {/* Step 1: Personal Details */}
           {step === 1 && (
             <>
-              <h2 className="text-2xl text-center font-bold text-gray-900 dark:text-white mb-2">
-                Create Your Account!
-              </h2>
-              <p className="text-sm text-center text-gray-600 dark:text-gray-300 mb-4">
-                Submit assignments, track progress, and receive feedback—all in
-                one place.
-              </p>
+              <div>
+                <h2 className="text-2xl text-center font-bold text-gray-900 dark:text-white mb-2">
+                  Create Your Account!
+                </h2>
+                <p className="text-sm text-center text-gray-600 dark:text-gray-300 mb-4">
+                  Submit assignments, track progress, and receive feedback—all
+                  in one place.
+                </p>
 
-              {/* Breadcrumb */}
-              <div className="text-sm text-center text-blue-500 font-bold mb-12">
-                Step {step} of 3
+                {/* Breadcrumb */}
+                <div className="text-sm text-center text-blue-500 font-bold mb-12">
+                  Step {step} of 3
+                </div>
               </div>
+
               <FormField
                 control={form.control}
                 name="fullName"
@@ -186,7 +203,7 @@ export default function SignUpPage() {
                     <FormControl>
                       <Input
                         className="enabled:hover:border-blue-600 disabled:opacity-75 "
-                        placeholder="Full Name"
+                        placeholder="John S. Deo"
                         {...field}
                       />
                     </FormControl>
@@ -203,7 +220,7 @@ export default function SignUpPage() {
                     <FormControl>
                       <Input
                         className="enabled:hover:border-blue-600 disabled:opacity-75"
-                        placeholder="Email Address"
+                        placeholder="demo@email.com"
                         {...field}
                       />
                     </FormControl>
@@ -220,7 +237,7 @@ export default function SignUpPage() {
                     <FormControl>
                       <Input
                         className="enabled:hover:border-blue-600 disabled:opacity-75"
-                        placeholder="Phone Number"
+                        placeholder="090X XXXX XXX"
                         {...field}
                       />
                     </FormControl>
@@ -245,7 +262,7 @@ export default function SignUpPage() {
                       </FormControl>
                       <SelectContent className="bg-bg1">
                         <SelectItem value="Student">Student</SelectItem>
-                        <SelectItem value="Teacher">Teacher</SelectItem>
+                        <SelectItem value="Lecturer">Lecturer</SelectItem>
                         <SelectItem value="Admin">Admin</SelectItem>
                       </SelectContent>
                     </Select>
@@ -259,9 +276,22 @@ export default function SignUpPage() {
           {/* Step 2: Role-Specific Details */}
           {step === 2 && role === "Student" && (
             <>
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
-                Student Details
-              </h2>
+              <div>
+                <h2 className="text-2xl text-center font-bold text-gray-900 dark:text-white mb-2">
+                  Student Details!
+                </h2>
+
+                <p className="text-sm text-center text-gray-600 dark:text-gray-300 mb-4">
+                  Submit assignments, track progress, and receive feedback—all
+                  in one place.
+                </p>
+
+                {/* Breadcrumb */}
+                <div className="text-sm text-center text-blue-500 font-bold mb-12">
+                  Step {step} of 3
+                </div>
+              </div>
+
               <FormField
                 control={form.control}
                 name="registrationNumber"
@@ -269,7 +299,12 @@ export default function SignUpPage() {
                   <FormItem className="mb-4">
                     <FormLabel>Registration Number</FormLabel>
                     <FormControl>
-                      <Input placeholder="Registration Number" {...field} />
+                      <Input
+                        className="enabled:hover:border-blue-600 disabled:opacity-75"
+                        placeholder="Registration Number"
+                        {...field}
+                        required
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -282,7 +317,12 @@ export default function SignUpPage() {
                   <FormItem className="mb-4">
                     <FormLabel>Faculty</FormLabel>
                     <FormControl>
-                      <Input placeholder="Faculty" {...field} />
+                      <Input
+                        className="enabled:hover:border-blue-600 disabled:opacity-75"
+                        placeholder="Faculty"
+                        {...field}
+                        required
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -295,7 +335,12 @@ export default function SignUpPage() {
                   <FormItem className="mb-4">
                     <FormLabel>Department</FormLabel>
                     <FormControl>
-                      <Input placeholder="Department" {...field} />
+                      <Input
+                        className="enabled:hover:border-blue-600 disabled:opacity-75"
+                        placeholder="Department"
+                        {...field}
+                        required
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -308,7 +353,12 @@ export default function SignUpPage() {
                   <FormItem className="mb-4">
                     <FormLabel>Level</FormLabel>
                     <FormControl>
-                      <Input placeholder="Level" {...field} />
+                      <Input
+                        className="enabled:hover:border-blue-600 disabled:opacity-75"
+                        placeholder="Level (e.g 200, 300 ...)"
+                        {...field}
+                        required
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -317,11 +367,23 @@ export default function SignUpPage() {
             </>
           )}
 
-          {step === 2 && (role === "Teacher" || role === "Admin") && (
+          {step === 2 && (role === "Lecturer" || role === "Admin") && (
             <>
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
-                {role} Details
-              </h2>
+              <div>
+                <h2 className="text-2xl text-center font-bold text-gray-900 dark:text-white mb-2">
+                  {role} Details
+                </h2>
+
+                <p className="text-sm text-center text-gray-600 dark:text-gray-300 mb-4">
+                  Submit assignments, track progress, and receive feedback—all
+                  in one place.
+                </p>
+
+                {/* Breadcrumb */}
+                <div className="text-sm text-center text-blue-500 font-bold mb-12">
+                  Step {step} of 3
+                </div>
+              </div>
               <FormField
                 control={form.control}
                 name="idNumber"
@@ -329,7 +391,12 @@ export default function SignUpPage() {
                   <FormItem className="mb-4">
                     <FormLabel>ID Number</FormLabel>
                     <FormControl>
-                      <Input placeholder="ID Number" {...field} />
+                      <Input
+                        className="enabled:hover:border-blue-600 disabled:opacity-75"
+                        placeholder="ID Number"
+                        {...field}
+                        required
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -342,7 +409,12 @@ export default function SignUpPage() {
                   <FormItem className="mb-4">
                     <FormLabel>Faculty</FormLabel>
                     <FormControl>
-                      <Input placeholder="Faculty" {...field} />
+                      <Input
+                        className="enabled:hover:border-blue-600 disabled:opacity-75"
+                        placeholder="Faculty"
+                        {...field}
+                        required
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -354,9 +426,21 @@ export default function SignUpPage() {
           {/* Step 3: Set Password */}
           {step === 3 && (
             <>
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
-                Set Your Password
-              </h2>
+              <div>
+                <h2 className="text-2xl text-center font-bold text-gray-900 dark:text-white mb-2">
+                  Set Your Password
+                </h2>
+
+                <p className="text-sm text-center text-gray-600 dark:text-gray-300 mb-4">
+                  Submit assignments, track progress, and receive feedback—all
+                  in one place.
+                </p>
+
+                {/* Breadcrumb */}
+                <div className="text-sm text-center text-blue-500 font-bold mb-12">
+                  Step {step} of 3
+                </div>
+              </div>
               <FormField
                 control={form.control}
                 name="password"
@@ -364,11 +448,26 @@ export default function SignUpPage() {
                   <FormItem className="mb-4">
                     <FormLabel>Password</FormLabel>
                     <FormControl>
-                      <Input
-                        type="password"
-                        placeholder="Password"
-                        {...field}
-                      />
+                      <div className="relative">
+                        <Input
+                          className="enabled:hover:border-blue-600 disabled:opacity-75"
+                          type={showPassword ? "text" : "password"}
+                          placeholder="Password"
+                          {...field}
+                          required
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="absolute right-2 top-2 text-gray-500"
+                        >
+                          {showPassword ? (
+                            <EyeOff size={18} />
+                          ) : (
+                            <Eye size={18} />
+                          )}
+                        </button>
+                      </div>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -381,11 +480,26 @@ export default function SignUpPage() {
                   <FormItem className="mb-4">
                     <FormLabel>Confirm Password</FormLabel>
                     <FormControl>
-                      <Input
-                        type="password"
-                        placeholder="Confirm Password"
-                        {...field}
-                      />
+                      <div className="relative">
+                        <Input
+                          className="enabled:hover:border-blue-600 disabled:opacity-75"
+                          type={showPassword ? "text" : "password"}
+                          placeholder="Confirm Password"
+                          {...field}
+                          required
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="absolute right-2 top-2 text-gray-500"
+                        >
+                          {showPassword ? (
+                            <EyeOff size={18} />
+                          ) : (
+                            <Eye size={18} />
+                          )}
+                        </button>
+                      </div>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -409,8 +523,15 @@ export default function SignUpPage() {
             <Button
               className="bg-blue-500 hover:bg-blue-400 text-white font-bold"
               type="submit"
+              disabled={isSubmitting}
             >
-              {step === 3 ? "Sign Up" : "Next"}
+              {isSubmitting ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : step === 3 ? (
+                "Sign Up"
+              ) : (
+                "Next"
+              )}
             </Button>
           </div>
 

@@ -33,7 +33,7 @@ export default function Home() {
       </div>
 
       {/* Background Image */}
-      <div className="w-full max-w-md mt-8 md:mt-0 md:max-w-md lg:max-w-xl">
+      <div className="w-full max-w-md mt-8 md:mt-0 md:max-w-md lg:max-w-2xl">
         <Image
           src={Bg}
           alt="Background image"

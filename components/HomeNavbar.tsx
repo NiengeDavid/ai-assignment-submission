@@ -4,6 +4,7 @@
 import Image from "next/image";
 import { useTheme } from "@/app/useTheme";
 import { Button } from "@/components/ui/button"; // using shadcn/ui
+import Link from "next/link";
 
 const SchoolLogo = "/assets/school-logo.png"; // school logo path
 
@@ -13,18 +14,20 @@ export default function HomeNavbar() {
   return (
     <nav className="w-full flex items-center justify-between p-4 bg-white dark:bg-bg2 border-b border-gray-200 dark:border-gray-700">
       {/* School Logo and Project Name */}
-      <div className="flex items-center space-x-4">
-        <Image
-          src={SchoolLogo}
-          alt="School Logo"
-          width={40}
-          height={40}
-          className="rounded-full"
-        />
-        <h1 className="text-xl font-bold text-gray-900 dark:text-white">
-          Assignment System
-        </h1>
-      </div>
+      <Link href={"/"}>
+        <div className="flex items-center space-x-4">
+          <Image
+            src={SchoolLogo}
+            alt="School Logo"
+            width={40}
+            height={40}
+            className="rounded-full"
+          />
+          <h1 className="text-xl font-bold text-gray-900 dark:text-white">
+            Assignment System
+          </h1>
+        </div>
+      </Link>
 
       {/* Dark/Light Mode Toggle */}
       <Button
