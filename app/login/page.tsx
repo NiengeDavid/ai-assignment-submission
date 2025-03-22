@@ -17,6 +17,9 @@ import Image from "next/image";
 import Link from "next/link";
 import { Eye, EyeOff } from "lucide-react"; // For eye icons
 import { Loader2 } from "lucide-react"; // For loading spinner
+import { useSignIn, useClerk } from "@clerk/nextjs"; // Clerk hooks
+import { useRouter } from "next/navigation"; // For redirecting
+import { toast } from "sonner";
 
 const Bg = "/assets/bg.png";
 const SchoolLogo = "/assets/full-logo.png"; // school logo path
@@ -30,6 +33,11 @@ const loginSchema = z.object({
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false); // For password visibility
   const [isSubmitting, setIsSubmitting] = useState(false); // For loading state
+  const [error, setError] = useState(""); // For error messages
+
+  const { signIn, setActive } = useSignIn(); // Clerk sign-in hook
+  const { redirectToSignIn } = useClerk(); // Clerk redirect hook
+  const router = useRouter(); // For redirecting
 
   const form = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
@@ -41,10 +49,38 @@ export default function LoginPage() {
 
   const onSubmit = async (data: z.infer<typeof loginSchema>) => {
     setIsSubmitting(true); // Start loading
-    // Simulate a login delay
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-    console.log("Login Data:", data);
-    setIsSubmitting(false); // Stop loading
+    setError(""); // Clear previous errors
+
+    try {
+      // Attempt to sign in
+      const result = await signIn.create({
+        identifier: data.email,
+        password: data.password,
+      });
+
+      if (result.status === "complete") {
+        // Set the user as active and redirect to the dashboard
+        await setActive({ session: result.createdSessionId });
+        router.push("/dashboard");
+      }
+    } catch (err: any) {
+      console.error("Login error:", err);
+      setError(err.errors[0].message); // Display error message
+      toast("Uh oh! Wrong password or email .", {
+        description: "Check and try again!",
+        closeButton: true,
+      });
+    } finally {
+      setIsSubmitting(false); // Stop loading
+    }
+  };
+
+  // Handle forgot password
+  const handleForgotPassword = () => {
+    // Redirect to the password reset page
+    redirectToSignIn({
+      redirectUrl: "/reset-password", // Replace with your password reset page URL
+    });
   };
 
   return (
@@ -61,7 +97,7 @@ export default function LoginPage() {
               alt="School Logo"
               width={92}
               height={38}
-              className=""
+              className="w-auto h-auto"
             />
           </div>
 
@@ -124,6 +160,22 @@ export default function LoginPage() {
             )}
           />
 
+          {/* Forgot Password Link */}
+          <div className="text-right mb-6">
+            <button
+              type="button"
+              onClick={handleForgotPassword}
+              className="text-sm text-blue-600 font-bold dark:text-blue-500 hover:underline"
+            >
+              Forgot Password?
+            </button>
+          </div>
+
+          {/* Error Message */}
+          {error && (
+            <p className="text-sm text-red-500 text-center mb-4">{error}</p>
+          )}
+
           {/* Login Button */}
           <Button
             className="w-full bg-blue-500 hover:bg-blue-400 text-white font-bold mt-6"
@@ -159,7 +211,7 @@ export default function LoginPage() {
           alt="Background image"
           height={960}
           width={719}
-          className="rounded-xl"
+          className="rounded-xl w-auto h-auto"
         />
       </div>
     </div>

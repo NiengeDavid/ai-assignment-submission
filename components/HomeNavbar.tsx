@@ -21,7 +21,7 @@ export default function HomeNavbar() {
             alt="School Logo"
             width={40}
             height={40}
-            className="rounded-full"
+            className="rounded-full h-auto w-auto"
           />
           <h1 className="text-xl font-bold text-gray-900 dark:text-white">
             Assignment System

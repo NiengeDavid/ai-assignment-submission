@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ClerkProvider } from "@clerk/nextjs";
 import HomeNavbar from "@/components/HomeNavbar";
+import { Toaster } from "@/components/ui/sonner";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -16,7 +17,8 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Assignment System",
-  description: "Submit assignments, track progress, and receive feedback—all in one place.",
+  description:
+    "Submit assignments, track progress, and receive feedback—all in one place.",
 };
 
 export default function RootLayout({
@@ -32,6 +34,7 @@ export default function RootLayout({
         >
           <HomeNavbar />
           {children}
+          <Toaster />
         </body>
       </html>
     </ClerkProvider>

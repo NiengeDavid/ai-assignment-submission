@@ -25,6 +25,9 @@ import Image from "next/image";
 import Link from "next/link";
 import { Eye, EyeOff } from "lucide-react"; // For eye icons
 import { Loader2 } from "lucide-react"; // For loading spinner
+import { useSignUp } from "@clerk/nextjs"; // Clerk signup hook
+import { useRouter } from "next/navigation"; // For redirecting
+import { toast } from "sonner";
 
 const Bg = "/assets/bg.png";
 const SchoolLogo = "/assets/full-logo.png";
@@ -63,6 +66,9 @@ export default function SignUpPage() {
   );
   const [showPassword, setShowPassword] = useState(false); // For password visibility
   const [isSubmitting, setIsSubmitting] = useState(false); // For loading state
+
+  const { isLoaded, signUp } = useSignUp(); // Clerk signup hook
+  const router = useRouter(); // For redirecting
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -143,6 +149,7 @@ export default function SignUpPage() {
   const onSubmit = async (data: z.infer<typeof formSchema>) => {
     const validation = validateStep(data);
     if (validation !== true) return;
+    if (!isLoaded) return;
 
     if (step === 1) {
       setRole(data.role);
@@ -152,10 +159,50 @@ export default function SignUpPage() {
     } else if (step === 3) {
       setIsSubmitting(true); // Start loading
       // Submit to Clerk
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-      console.log("Form Data:", data);
-      setIsSubmitting(false); // Stop loading
+      try {
+        // Create user with Clerk
+        const result = await signUp.create({
+          emailAddress: data.email,
+          password: data.password,
+          firstName: data.fullName.split(" ")[0], // Extract first name
+          lastName: data.fullName.split(" ")[1] || "", // Extract last name
+          unsafeMetadata: {
+            // Include all form data in metadata
+            fullName: data.fullName,
+            email: data.email,
+            phoneNumber: data.phoneNumber,
+            role: data.role,
+            registrationNumber: data.registrationNumber,
+            faculty: data.faculty,
+            department: data.department,
+            level: data.level,
+            idNumber: data.idNumber,
+          },
+        });
+
+        // Prepare email verification
+        await signUp.prepareEmailAddressVerification({
+          strategy: "email_code",
+        });
+
+        // Redirect to email verification page
+        router.push("/verify-email");
+      } catch (err) {
+        console.error("Error during signup:", err);
+        toast("Uh oh! Something went wrong.", {
+          description: "There was a problem with your request. Try again",
+          closeButton: true,
+        });
+      } finally {
+        setIsSubmitting(false); // Stop loading
+        console.log("Form Data:", data);
+      }
     }
+    //     await new Promise((resolve) => setTimeout(resolve, 2000));
+    //     console.log("Form Data:", data);
+    //     setIsSubmitting(false); // Stop loading
+    //   }
+    // }
   };
 
   return (
@@ -165,6 +212,9 @@ export default function SignUpPage() {
           onSubmit={form.handleSubmit(onSubmit)}
           className="w-full max-w-md p-6 bg-white dark:bg-bg2 rounded-lg shadow-md"
         >
+          {/* Add the CAPTCHA element */}
+          <div id="clerk-captcha"></div>
+
           {/* School logo */}
           <div className="flex items-center justify-center mb-8">
             <Image
@@ -172,7 +222,7 @@ export default function SignUpPage() {
               alt="School Logo"
               width={92}
               height={38}
-              className=""
+              className="w-auto h-auto"
             />
           </div>
 
@@ -556,7 +606,7 @@ export default function SignUpPage() {
           alt="Background image"
           height={960}
           width={719}
-          className="rounded-xl"
+          className="rounded-xl h-auto w-auto"
         />
       </div>
     </div>
