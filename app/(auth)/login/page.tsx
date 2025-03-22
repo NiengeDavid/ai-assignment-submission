@@ -53,15 +53,19 @@ export default function LoginPage() {
 
     try {
       // Attempt to sign in
-      const result = await signIn.create({
-        identifier: data.email,
-        password: data.password,
-      });
+      if (signIn) {
+        const result = await signIn.create({
+          identifier: data.email,
+          password: data.password,
+        });
 
-      if (result.status === "complete") {
-        // Set the user as active and redirect to the dashboard
-        await setActive({ session: result.createdSessionId });
-        router.push("/dashboard");
+        if (result.status === "complete") {
+          // Set the user as active and redirect to the dashboard
+          await setActive({ session: result.createdSessionId });
+          router.push("/dashboard");
+        }
+      } else {
+        setError("Sign-in service is unavailable.");
       }
     } catch (err: any) {
       console.error("Login error:", err);
@@ -79,7 +83,7 @@ export default function LoginPage() {
   const handleForgotPassword = () => {
     // Redirect to the password reset page
     redirectToSignIn({
-      redirectUrl: "/reset-password", // Replace with your password reset page URL
+      redirectUrl: "/login", // Replace with your password reset page URL
     });
   };
 
