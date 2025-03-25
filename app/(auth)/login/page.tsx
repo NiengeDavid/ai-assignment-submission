@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -15,9 +15,8 @@ import {
 import { Input } from "@/components/ui/input";
 import Image from "next/image";
 import Link from "next/link";
-import { Eye, EyeOff } from "lucide-react"; // For eye icons
-import { Loader2 } from "lucide-react"; // For loading spinner
-import { useSignIn, useClerk } from "@clerk/nextjs"; // Clerk hooks
+import { Eye, EyeOff, Loader2 } from "lucide-react";
+import { useSignIn, useUser, useClerk } from "@clerk/nextjs"; // Clerk hooks
 import { useRouter } from "next/navigation"; // For redirecting
 import { toast } from "sonner";
 
@@ -31,11 +30,14 @@ const loginSchema = z.object({
 });
 
 export default function LoginPage() {
+  // 1. Declare ALL hooks unconditionally at the top
   const [showPassword, setShowPassword] = useState(false); // For password visibility
   const [isSubmitting, setIsSubmitting] = useState(false); // For loading state
   const [error, setError] = useState(""); // For error messages
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
 
-  const { signIn, setActive } = useSignIn(); // Clerk sign-in hook
+  const { isSignedIn, isLoaded: isUserLoaded } = useUser();
+  const { signIn, setActive, isLoaded: isSignInLoaded } = useSignIn(); // Clerk sign-in hook
   const { redirectToSignIn } = useClerk(); // Clerk redirect hook
   const router = useRouter(); // For redirecting
 
@@ -46,6 +48,26 @@ export default function LoginPage() {
       password: "",
     },
   });
+
+  // 2. Effects after all hooks
+  // Redirect if already signed in
+  useEffect(() => {
+    if (isUserLoaded && isSignInLoaded) {
+      if (isSignedIn) {
+        router.push("/dashboard");
+      }
+      setIsCheckingAuth(false);
+    }
+  }, [isSignedIn, isUserLoaded, isSignInLoaded, router]);
+
+  // 3. Conditional rendering (never before hooks)
+  if (isCheckingAuth) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
 
   const onSubmit = async (data: z.infer<typeof loginSchema>) => {
     setIsSubmitting(true); // Start loading

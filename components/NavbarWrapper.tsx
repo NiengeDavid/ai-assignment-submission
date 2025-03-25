@@ -18,7 +18,7 @@ export default function NavbarWrapper() {
   return (
     <>
       {isPublicRoute && <HomeNavbar />}
-      {isProtectedRoute && <Navbar />}
+      {/* {isProtectedRoute && <Navbar />} */}
     </>
   );
 }
