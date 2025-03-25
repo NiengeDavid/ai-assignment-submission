@@ -122,6 +122,7 @@ export default function SignUpPage() {
         .object({
           idNumber: z.string().min(1, "ID Number is required"),
           faculty: z.string().min(1, "Faculty is required"),
+          department: z.string().min(1, "Department is required"),
         })
         .safeParse(data);
 
@@ -462,6 +463,24 @@ export default function SignUpPage() {
                       <Input
                         className="enabled:hover:border-blue-600 disabled:opacity-75"
                         placeholder="Faculty"
+                        {...field}
+                        required
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="department"
+                render={({ field }) => (
+                  <FormItem className="mb-4">
+                    <FormLabel>Department</FormLabel>
+                    <FormControl>
+                      <Input
+                        className="enabled:hover:border-blue-600 disabled:opacity-75"
+                        placeholder="Department"
                         {...field}
                         required
                       />

@@ -1,28 +1,31 @@
-"use client"
+"use client";
 
-import * as React from "react"
+import * as React from "react";
 import {
   IconCamera,
   IconChartBar,
-  IconDashboard,
-  IconDatabase,
+  //IconDatabase,
   IconFileAi,
   IconFileDescription,
-  IconFileWord,
-  IconFolder,
+  //IconFileWord,
+  //IconFolder,
   IconHelp,
-  IconInnerShadowTop,
   IconListDetails,
-  IconReport,
+  //IconReport,
   IconSearch,
   IconSettings,
-  IconUsers,
-} from "@tabler/icons-react"
+  //IconUsers,
+  IconHome,
+  IconBell,
+  IconHelpHexagon,
+} from "@tabler/icons-react";
+import Image from "next/image"; // Add this import
+import SchoolLogo from "@/public/assets/school-logo.png"; // Adjust path to your logo
 
-import { NavDocuments } from "@/components/nav-documents"
-import { NavMain } from "@/components/nav-main"
-import { NavSecondary } from "@/components/nav-secondary"
-import { NavUser } from "@/components/nav-user"
+// import { NavDocuments } from "@/components/nav-documents";
+import { NavMain } from "@/components/nav-main";
+import { NavSecondary } from "@/components/nav-secondary";
+import { NavUser } from "@/components/nav-user";
 import {
   Sidebar,
   SidebarContent,
@@ -31,7 +34,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-} from "@/components/ui/sidebar"
+} from "@/components/ui/sidebar";
 
 const data = {
   user: {
@@ -43,29 +46,35 @@ const data = {
     {
       title: "Dashboard",
       url: "#",
-      icon: IconDashboard,
+      icon: IconHome,
     },
     {
-      title: "Lifecycle",
+      title: "Assignments",
       url: "#",
       icon: IconListDetails,
     },
     {
-      title: "Analytics",
+      title: "Grades & Feedback",
       url: "#",
       icon: IconChartBar,
     },
     {
-      title: "Projects",
+      title: "Notifications",
       url: "#",
-      icon: IconFolder,
+      icon: IconBell,
     },
-    {
-      title: "Team",
-      url: "#",
-      icon: IconUsers,
-    },
+    // {
+    //   title: "Account Settings",
+    //   url: "#",
+    //   icon: IconSettings,
+    // },
+    // {
+    //   title: "Help & Support",
+    //   url: "#",
+    //   icon: IconHelpHexagon,
+    // },
   ],
+
   navClouds: [
     {
       title: "Capture",
@@ -121,61 +130,70 @@ const data = {
       icon: IconSettings,
     },
     {
-      title: "Get Help",
+      title: "Help & Support",
       url: "#",
-      icon: IconHelp,
+      icon: IconHelpHexagon,
     },
-    {
-      title: "Search",
-      url: "#",
-      icon: IconSearch,
-    },
+    // {
+    //   title: "Search",
+    //   url: "#",
+    //   icon: IconSearch,
+    // },
   ],
-  documents: [
-    {
-      name: "Data Library",
-      url: "#",
-      icon: IconDatabase,
-    },
-    {
-      name: "Reports",
-      url: "#",
-      icon: IconReport,
-    },
-    {
-      name: "Word Assistant",
-      url: "#",
-      icon: IconFileWord,
-    },
-  ],
-}
+  // documents: [
+  //   {
+  //     name: "Data Library",
+  //     url: "#",
+  //     icon: IconDatabase,
+  //   },
+  //   {
+  //     name: "Reports",
+  //     url: "#",
+  //     icon: IconReport,
+  //   },
+  //   {
+  //     name: "Word Assistant",
+  //     url: "#",
+  //     icon: IconFileWord,
+  //   },
+  // ],
+};
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
-    <Sidebar collapsible="offcanvas" {...props}>
-      <SidebarHeader>
-        <SidebarMenu>
-          <SidebarMenuItem>
+    <Sidebar collapsible="offcanvas" {...props} className="dark:bg-bg2">
+      <SidebarHeader className="dark:bg-bg2">
+        <SidebarMenu className="dark:bg-bg2">
+          <SidebarMenuItem className="dark:bg-bg2">
             <SidebarMenuButton
               asChild
-              className="data-[slot=sidebar-menu-button]:!p-1.5"
+              className="data-[slot=sidebar-menu-button]:!p-1.5 dark:bg-bg2 dark:hover:bg-bg1"
             >
-              <a href="#">
-                <IconInnerShadowTop className="!size-5" />
-                <span className="text-base font-semibold">Acme Inc.</span>
+              <a href="/dashboard">
+                <Image
+                  src={SchoolLogo}
+                  alt="School Logo"
+                  width={215} // Adjust size as needed
+                  height={62}
+                  className="h-8 w-auto" // Maintain aspect ratio
+                />
+                {/* Optional: Keep or remove the text */}
+                <span className="text-base text-orange-300 font-semibold">
+                  Mewar Intl. University
+                </span>
               </a>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
-      <SidebarContent>
+      <SidebarContent className="dark:bg-bg2">
         <NavMain items={data.navMain} />
-        <NavDocuments items={data.documents} />
+        {/* <NavDocuments items={data.documents} /> */}
         <NavSecondary items={data.navSecondary} className="mt-auto" />
       </SidebarContent>
-      <SidebarFooter>
+      <SidebarFooter className="dark:bg-bg2">
         <NavUser user={data.user} />
       </SidebarFooter>
     </Sidebar>
-  )
+  );
 }

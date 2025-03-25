@@ -1,50 +1,81 @@
 "use client";
 
 import { useTheme } from "@/app/useTheme";
-import { Button } from "@/components/ui/button"; // using shadcn/ui
+import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
-import { useUser } from "@clerk/nextjs";
+import { useUser, UserButton } from "@clerk/nextjs";
+import { BellIcon } from "lucide-react";
 
 export function SiteHeader() {
   const { theme, setTheme } = useTheme();
-  const { user } = useUser();
+  const { isLoaded, isSignedIn, user } = useUser();
 
   return (
-    <header className="flex h-(--header-height) shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-(--header-height)">
+    <header className="flex h-(--header-height) shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-(--header-height) dark:bg-bg2 ">
       <div className="flex w-full items-center gap-1 px-4 lg:gap-2 lg:px-6">
         <SidebarTrigger className="-ml-1" />
         <Separator
           orientation="vertical"
           className="mx-2 data-[orientation=vertical]:h-4"
         />
-        <h1 className="text-base font-medium">Welcome, {user?.fullName}!</h1>
+        <h1 className="text-base font-bold">
+          {isLoaded && isSignedIn
+            ? `Welcome ${user?.fullName || user?.firstName}`
+            : "Welcome!"}
+        </h1>
         <div className="ml-auto flex items-center gap-2">
-          <Button variant="ghost" asChild size="sm" className="hidden sm:flex">
-            <a
-              href="https://github.com/shadcn-ui/ui/tree/main/apps/v4/app/(examples)/dashboard"
-              rel="noopener noreferrer"
-              target="_blank"
-              className="dark:text-foreground"
+          {/* Theme Button   */}
+          <div className="">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setTheme(theme === "light" ? "dark" : "light")}
+              className="cursor-pointer"
             >
-              GitHub
-            </a>
-          </Button>
-        </div>
-        <div className="flex justify-end">
-          {/* Dark/Light Mode Toggle */}
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setTheme(theme === "light" ? "dark" : "light")}
-            className="cursor-pointer"
-          >
-            {theme === "light" ? (
-              <MoonIcon className="h-5 w-5" /> // Moon icon for dark mode
-            ) : (
-              <SunIcon className="h-5 w-5" /> // Sun icon for light mode
-            )}
-          </Button>
+              {theme === "light" ? (
+                <MoonIcon className="h-5 w-5" />
+              ) : (
+                <SunIcon className="h-5 w-5" />
+              )}
+            </Button>
+          </div>
+
+          {/* Notification Bell */}
+          {isLoaded && isSignedIn && (
+            <div className="relative">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="relative rounded-full cursor-pointer"
+                onClick={() => {
+                  // Notification click handler will go here
+                }}
+              >
+                <BellIcon className="h-5 w-5" />
+              </Button>
+              {/* Notification badge */}
+              <span className="absolute -right-0 -top-0 flex h-4 w-4 items-center justify-center rounded-full bg-blue-500 p-1 text-sm text-white">
+                3<span className="sr-only">3 unread notifications</span>
+              </span>
+            </div>
+          )}
+
+          {/* User Button - Only shows when authenticated */}
+          {isLoaded && isSignedIn && (
+            <div className="ml-2">
+              <UserButton
+                afterSignOutUrl="/"
+                appearance={{
+                  elements: {
+                    avatarBox: "h-8 w-8", // Adjust size as needed
+                    userButtonPopoverCard:
+                      "shadow-lg dark:shadow-gray-800 dark:bg-bg1", // Custom styling
+                  },
+                }}
+              />
+            </div>
+          )}
         </div>
       </div>
     </header>
