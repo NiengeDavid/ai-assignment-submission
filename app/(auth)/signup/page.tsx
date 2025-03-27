@@ -39,7 +39,7 @@ const formSchema = z
     fullName: z.string().min(1, "Full Name is required"),
     email: z.string().email("Invalid email address"),
     phoneNumber: z.string().min(1, "Phone Number is required"),
-    role: z.enum(["Student", "Lecturer", "Admin"]),
+    role: z.enum(["student", "lecturer", "admin"]),
 
     // Step 2 Student
     registrationNumber: z.string().optional(),
@@ -61,7 +61,7 @@ const formSchema = z
 
 export default function SignUpPage() {
   const [step, setStep] = useState(1);
-  const [role, setRole] = useState<"Student" | "Lecturer" | "Admin" | null>(
+  const [role, setRole] = useState<"student" | "lecturer" | "admin" | null>(
     null
   );
   const [showPassword, setShowPassword] = useState(false); // For password visibility
@@ -95,14 +95,14 @@ export default function SignUpPage() {
           fullName: z.string().min(1),
           email: z.string().email(),
           phoneNumber: z.string().min(1),
-          role: z.enum(["Student", "Lecturer", "Admin"]),
+          role: z.enum(["student", "lecturer", "admin"]),
         })
         .safeParse(data);
 
       if (!result.success) return result.error;
     }
 
-    if (step === 2 && role === "Student") {
+    if (step === 2 && role === "student") {
       const result = z
         .object({
           registrationNumber: z
@@ -117,7 +117,7 @@ export default function SignUpPage() {
       if (!result.success) return result.error;
     }
 
-    if (step === 2 && role !== "Student") {
+    if (step === 2 && role !== "student") {
       const result = z
         .object({
           idNumber: z.string().min(1, "ID Number is required"),
@@ -312,9 +312,9 @@ export default function SignUpPage() {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent className="bg-bg1">
-                        <SelectItem value="Student">Student</SelectItem>
-                        <SelectItem value="Lecturer">Lecturer</SelectItem>
-                        <SelectItem value="Admin">Admin</SelectItem>
+                        <SelectItem value="student">Student</SelectItem>
+                        <SelectItem value="lecturer">Lecturer</SelectItem>
+                        <SelectItem value="admin">Admin</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -325,7 +325,7 @@ export default function SignUpPage() {
           )}
 
           {/* Step 2: Role-Specific Details */}
-          {step === 2 && role === "Student" && (
+          {step === 2 && role === "student" && (
             <>
               <div>
                 <h2 className="text-2xl text-center font-bold text-gray-900 dark:text-white mb-2">
@@ -403,14 +403,22 @@ export default function SignUpPage() {
                 render={({ field }) => (
                   <FormItem className="mb-4">
                     <FormLabel>Level</FormLabel>
-                    <FormControl>
-                      <Input
-                        className="enabled:hover:border-blue-600 disabled:opacity-75"
-                        placeholder="Level (e.g 200, 300 ...)"
-                        {...field}
-                        required
-                      />
-                    </FormControl>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger className="w-full enabled:hover:border-blue-600 disabled:opacity-75">
+                          <SelectValue placeholder="Select your level" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent className="bg-bg1">
+                        <SelectItem value="100">100</SelectItem>
+                        <SelectItem value="200">200</SelectItem>
+                        <SelectItem value="300">300</SelectItem>
+                        <SelectItem value="400">400</SelectItem>
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -418,7 +426,7 @@ export default function SignUpPage() {
             </>
           )}
 
-          {step === 2 && (role === "Lecturer" || role === "Admin") && (
+          {step === 2 && (role === "lecturer" || role === "admin") && (
             <>
               <div>
                 <h2 className="text-2xl text-center font-bold text-gray-900 dark:text-white mb-2">
