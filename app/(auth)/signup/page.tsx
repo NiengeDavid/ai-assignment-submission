@@ -28,6 +28,13 @@ import { Loader2 } from "lucide-react"; // For loading spinner
 import { useSignUp } from "@clerk/nextjs"; // Clerk signup hook
 import { useRouter } from "next/navigation"; // For redirecting
 import { toast } from "sonner";
+import { readToken } from "@/sanity/lib/sanity.api";
+import {
+  getClient,
+  getAllDepartments,
+  getAllFaculties,
+} from "@/sanity/lib/sanity.client";
+import { Department, Faculty } from "@/sanity/lib/sanity.queries";
 
 const Bg = "/assets/bg.png";
 const SchoolLogo = "/assets/full-logo.png";
@@ -60,6 +67,25 @@ const formSchema = z
   });
 
 export default function SignUpPage() {
+  const client = getClient({ token: readToken });
+  const [departments, setDepartments] = useState<Department[]>([]);
+  const [faculties, setFaculties] = useState<Faculty[]>([]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const [departmentsData, facultiesData] = await Promise.all([
+        getAllDepartments(client),
+        getAllFaculties(client),
+      ]);
+      setDepartments(departmentsData);
+      setFaculties(facultiesData);
+    };
+
+    fetchData();
+    // console.log("Departments:", departments);
+    // console.log("Faculties:", faculties);
+  }, [client]);
+
   const [step, setStep] = useState(1);
   const [role, setRole] = useState<"student" | "lecturer" | "admin" | null>(
     null
@@ -367,14 +393,26 @@ export default function SignUpPage() {
                 render={({ field }) => (
                   <FormItem className="mb-4">
                     <FormLabel>Faculty</FormLabel>
-                    <FormControl>
-                      <Input
-                        className="enabled:hover:border-blue-600 disabled:opacity-75"
-                        placeholder="Faculty"
-                        {...field}
-                        required
-                      />
-                    </FormControl>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger className="w-full enabled:hover:border-blue-600 disabled:opacity-75">
+                          <SelectValue placeholder="Select your faculty" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent className="bg-bg1">
+                        {faculties.map((faculty) => (
+                          <SelectItem
+                            key={faculty._id}
+                            value={faculty.name || ""}
+                          >
+                            {faculty.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -385,14 +423,26 @@ export default function SignUpPage() {
                 render={({ field }) => (
                   <FormItem className="mb-4">
                     <FormLabel>Department</FormLabel>
-                    <FormControl>
-                      <Input
-                        className="enabled:hover:border-blue-600 disabled:opacity-75"
-                        placeholder="Department"
-                        {...field}
-                        required
-                      />
-                    </FormControl>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger className="w-full enabled:hover:border-blue-600 disabled:opacity-75">
+                          <SelectValue placeholder="Select your department" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent className="bg-bg1">
+                        {departments.map((department) => (
+                          <SelectItem
+                            key={department._id}
+                            value={department.name || ""}
+                          >
+                            {department.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}

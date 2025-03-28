@@ -26,23 +26,16 @@ export function getClient(preview?: { token: string }): SanityClient {
     dataset,
     apiVersion,
     useCdn,
-    perspective: "published",
-    stega: {
-      enabled: preview?.token ? true : false,
-      studioUrl,
-    },
   });
-  if (preview) {
-    if (!preview.token) {
-      throw new Error("You must provide a token to preview drafts");
-    }
+
+  // If preview is provided and has a token, return a client with the token
+  if (preview?.token) {
     return client.withConfig({
       token: preview.token,
-      useCdn: false,
-      ignoreBrowserTokenWarning: true,
-      perspective: "previewDrafts",
     });
   }
+
+  // Otherwise, return the default client
   return client;
 }
 
