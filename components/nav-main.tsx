@@ -11,15 +11,13 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 
-export function NavMain({
-  items,
-}: {
-  items: {
-    title: string;
-    url: string;
-    icon?: Icon;
-  }[];
-}) {
+interface NavMainProps {
+  items: { title: string; url: string; icon: React.ComponentType }[];
+  activetab: string;
+  onTabChange: (tab: string) => void;
+}
+
+export function NavMain({ items, activetab, onTabChange }: NavMainProps) {
   return (
     <SidebarGroup>
       <SidebarGroupContent className="flex flex-col gap-2 mt-4">
@@ -28,7 +26,12 @@ export function NavMain({
             <SidebarMenuItem key={item.title}>
               <SidebarMenuButton
                 tooltip={item.title}
-                className="cursor-pointer font-medium dark:hover:bg-bg1"
+                onClick={() => onTabChange(item.title)}
+                className={`cursor-pointer font-medium rounded-none ${
+                  activetab === item.title
+                    ? "bg-bg4 text-white"
+                    : "dark:hover:bg-bg4"
+                }`}
               >
                 {item.icon && <item.icon />}
                 <span className="font-medium">{item.title}</span>

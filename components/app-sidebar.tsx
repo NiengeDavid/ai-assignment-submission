@@ -36,6 +36,11 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 
+interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
+  activetab: string;
+  onTabChange: (tab: string) => void;
+}
+
 const data = {
   user: {
     name: "shadcn",
@@ -75,54 +80,54 @@ const data = {
     // },
   ],
 
-  navClouds: [
-    {
-      title: "Capture",
-      icon: IconCamera,
-      isActive: true,
-      url: "#",
-      items: [
-        {
-          title: "Active Proposals",
-          url: "#",
-        },
-        {
-          title: "Archived",
-          url: "#",
-        },
-      ],
-    },
-    {
-      title: "Proposal",
-      icon: IconFileDescription,
-      url: "#",
-      items: [
-        {
-          title: "Active Proposals",
-          url: "#",
-        },
-        {
-          title: "Archived",
-          url: "#",
-        },
-      ],
-    },
-    {
-      title: "Prompts",
-      icon: IconFileAi,
-      url: "#",
-      items: [
-        {
-          title: "Active Proposals",
-          url: "#",
-        },
-        {
-          title: "Archived",
-          url: "#",
-        },
-      ],
-    },
-  ],
+  // navClouds: [
+  //   {
+  //     title: "Capture",
+  //     icon: IconCamera,
+  //     isActive: true,
+  //     url: "#",
+  //     items: [
+  //       {
+  //         title: "Active Proposals",
+  //         url: "#",
+  //       },
+  //       {
+  //         title: "Archived",
+  //         url: "#",
+  //       },
+  //     ],
+  //   },
+  //   {
+  //     title: "Proposal",
+  //     icon: IconFileDescription,
+  //     url: "#",
+  //     items: [
+  //       {
+  //         title: "Active Proposals",
+  //         url: "#",
+  //       },
+  //       {
+  //         title: "Archived",
+  //         url: "#",
+  //       },
+  //     ],
+  //   },
+  //   {
+  //     title: "Prompts",
+  //     icon: IconFileAi,
+  //     url: "#",
+  //     items: [
+  //       {
+  //         title: "Active Proposals",
+  //         url: "#",
+  //       },
+  //       {
+  //         title: "Archived",
+  //         url: "#",
+  //       },
+  //     ],
+  //   },
+  // ],
   navSecondary: [
     {
       title: "Settings",
@@ -159,7 +164,11 @@ const data = {
   // ],
 };
 
-export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+export function AppSidebar({
+  activetab,
+  onTabChange,
+  ...props
+}: AppSidebarProps) {
   return (
     <Sidebar collapsible="offcanvas" {...props} className="dark:bg-bg2">
       <SidebarHeader className="dark:bg-bg2">
@@ -167,7 +176,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           <SidebarMenuItem className="dark:bg-bg2">
             <SidebarMenuButton
               asChild
-              className="data-[slot=sidebar-menu-button]:!p-1.5 dark:bg-bg2 dark:hover:bg-bg1"
+              className="data-[slot=sidebar-menu-button]:!p-1.5 hover:bg-transparent mt-4 md:mt-0 dark:bg-bg2"
             >
               <a href="/dashboard">
                 <Image
@@ -186,10 +195,18 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
-      <SidebarContent className="dark:bg-bg2">
-        <NavMain items={data.navMain} />
+      <SidebarContent className="dark:bg-bg2 flex flex-col justify-between my-auto">
+        <NavMain
+          items={data.navMain}
+          activetab={activetab}
+          onTabChange={onTabChange}
+        />
         {/* <NavDocuments items={data.documents} /> */}
-        <NavSecondary items={data.navSecondary} className="mt-auto" />
+        <NavSecondary
+          items={data.navSecondary}
+          activetab={activetab}
+          onTabChange={onTabChange}
+        />
       </SidebarContent>
       <SidebarFooter className="dark:bg-bg2">
         <NavUser user={data.user} />
