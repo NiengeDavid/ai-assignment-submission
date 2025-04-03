@@ -1,45 +1,11 @@
-import { SectionCards } from "@/components/section-cards";
 import { AssignmentCards } from "@/components/assignment-cards";
+import { Button } from "@/components/ui/button";
 
-interface DashProps {
+interface AssignmentsProps {
   setActiveTab: (tab: string) => void;
 }
 
-export default function Dash({ setActiveTab }: DashProps) {
-  const cardData: {
-    title: string;
-    description: string;
-    value: string;
-    trendValue: string;
-    footerText: string;
-    footerDescription: string;
-  }[] = [
-    {
-      title: "Total Assignments",
-      description: "Total Assignments",
-      value: "10",
-      trendValue: "",
-      footerText: "",
-      footerDescription: "",
-    },
-    {
-      title: "Upcoming Assignments",
-      description: "Upcoming Assignments",
-      value: "7",
-      trendValue: "",
-      footerText: "",
-      footerDescription: "",
-    },
-    {
-      title: "Graded Assignments",
-      description: "Graded Assignments",
-      value: "3",
-      trendValue: "",
-      footerText: "",
-      footerDescription: "",
-    },
-  ];
-
+export default function Assignments({ setActiveTab }: AssignmentsProps) {
   const assignments = [
     {
       id: "1",
@@ -96,32 +62,21 @@ export default function Dash({ setActiveTab }: DashProps) {
   ];
 
   return (
-    <div className="flex flex-col gap-8">
-      {/* Assifnments Overview */}
-      <div className="bg-gray-200 w-full py-6 px-2 m-6 mx-auto space-y-6 rounded-lg shadow-md dark:bg-bg2">
-        <div className="flex flex-col gap-6">
-          <h1 className="font-bold text-2xl px-6 text-start">Assignments</h1>
-          <SectionCards data={cardData} />
+    <div className="bg-transparent w-full py-6 mx-auto space-y-6">
+      <div className="flex flex-col gap-8">
+        <div className="w-full px-3 flex gap-6 justify-between mx-auto items-center">
+          <h1 className="font-semibold text-lg text-start md:text-2xl">
+            Assignments
+          </h1>
+          <Button
+            onClick={() => setActiveTab("Grades & Feedback")}
+            className="bg-blue-500 hover:bg-blue-400 text-white font-medium cursor-pointer px-4 py-2 rounded-sm"
+          >
+            View Grades
+          </Button>
         </div>
-      </div>
-
-      {/* Upcoming Assignments */}
-      <div className="bg-transparent w-full py-6 m-6 mx-auto space-y-6">
-        <div className="flex flex-col gap-8">
-          <div className="w-full px-3 flex gap-6 justify-between mx-auto items-center">
-            <h1 className="font-semibold text-lg text-start md:text-2xl">
-              Upcoming Assignments
-            </h1>
-            <button
-              onClick={() => setActiveTab("Assignments")}
-              className="bg-blue-500 hover:bg-blue-400 text-white font-medium cursor-pointer px-4 py-2 rounded-sm"
-            >
-              View All
-            </button>
-          </div>
-          <div className="flex w-full justify-center items-center mx-auto p-3">
-            <AssignmentCards data={assignments} />
-          </div>
+        <div className="flex w-full justify-center items-center mx-auto p-3">
+          <AssignmentCards data={assignments} />
         </div>
       </div>
     </div>

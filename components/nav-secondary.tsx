@@ -19,6 +19,7 @@ interface NavSecondaryProps {
 
 export function NavSecondary({
   items,
+  activetab,
   onTabChange,
   ...props
 }: NavSecondaryProps) {
@@ -31,7 +32,11 @@ export function NavSecondary({
               <SidebarMenuButton
                 asChild
                 onClick={() => onTabChange(item.title)}
-                className="cursor-pointer font-medium rounded-none dark:hover:bg-bg4"
+                className={`cursor-pointer font-medium rounded-none ${
+                  activetab === item.title
+                    ? "bg-bg4 text-white"
+                    : "dark:hover:bg-bg4"
+                }`}
               >
                 <a href={item.url}>
                   <item.icon />

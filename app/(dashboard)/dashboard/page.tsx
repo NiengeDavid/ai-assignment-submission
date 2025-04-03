@@ -2,13 +2,10 @@
 
 import { useState } from "react";
 import { AppSidebar } from "@/components/app-sidebar";
-import { ChartAreaInteractive } from "@/components/chart-area-interactive";
-import { DataTable } from "@/components/data-table";
-import { SectionCards } from "@/components/section-cards";
 import { SiteHeader } from "@/components/site-header";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
-
-import data from "./data.json";
+import Dash from "@/containers/student/dash";
+import Assignments from "@/containers/student/assignments";
 
 export default function Page() {
   // State to track the active tab
@@ -40,20 +37,14 @@ export default function Page() {
             <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
               {/* Conditionally render content based on the active tab */}
               {activeTab === "Dashboard" && (
-                <div className="space-y-6">
+                <div className="px-4 lg:px-6">
                   {/* Add your dashboard content here */}
-                  <SectionCards />
-                  <div className="px-4 lg:px-6">
-                    <ChartAreaInteractive />
-                  </div>
-                  <DataTable data={data} />
+                  <Dash setActiveTab={handleTabChange} />
                 </div>
               )}
               {activeTab === "Assignments" && (
                 <div className="px-4 lg:px-6">
-                  <h2 className="text-xl font-bold">Assignments</h2>
-                  <p>Here you can view and manage your assignments.</p>
-                  {/* Add your assignments content here */}
+                  <Assignments setActiveTab={handleTabChange} />
                 </div>
               )}
               {activeTab === "Grades & Feedback" && (
