@@ -53,6 +53,17 @@ export default function Dash({ setActiveTab }: DashProps) {
       title: "Software Engineering Principles - Research Paper",
       question:
         "Write a 5-page research paper on the principles of Software Engineering, focusing on scalability, maintainability, and security. Provide real-world examples and cite at least three academic sources.",
+      btnAction: {
+        text: "View Details",
+        link: "/assignments/1",
+      },
+      resources: [
+        {
+          name: "Assignment Details.docx",
+          size: "24 KB",
+          link: "/assets/resources/assignment-details.docx",
+        },
+      ] as [{ name: string; size: string; link: string }],
     },
     {
       id: "2",
@@ -66,6 +77,17 @@ export default function Dash({ setActiveTab }: DashProps) {
       title: "Design Patterns - Case Study",
       question:
         "Analyze the use of design patterns in a real-world software project. Focus on patterns like Singleton, Factory, and Observer. Provide examples and discuss their impact on the project's scalability and maintainability.",
+      btnAction: {
+        text: "View Details",
+        link: "/assignments/2",
+      },
+      resources: [
+        {
+          name: "Assignment Details.docx",
+          size: "24 KB",
+          link: "/assets/resources/assignment-details.docx",
+        },
+      ] as [{ name: string; size: string; link: string }],
     },
     {
       id: "3",
@@ -79,6 +101,22 @@ export default function Dash({ setActiveTab }: DashProps) {
       title: "Automated Testing Frameworks",
       question:
         "Research and compare two popular automated testing frameworks. Discuss their features, advantages, and limitations. Provide examples of how they can be integrated into a CI/CD pipeline.",
+      btnAction: {
+        text: "View Details",
+        link: "/assignments/3",
+      },
+      resources: [
+        {
+          name: "Assignment Details.docx",
+          size: "24 KB",
+          link: "/assets/resources/assignment-details.docx",
+        },
+        {
+          name: "Grading Rubric.pdf",
+          size: "18 KB",
+          link: "/assets/resources/grading-rubric.pdf",
+        },
+      ],
     },
     {
       id: "4",
@@ -92,6 +130,22 @@ export default function Dash({ setActiveTab }: DashProps) {
       title: "Automated Testing Frameworks",
       question:
         "Research and compare two popular automated testing frameworks. Discuss their features, advantages, and limitations. Provide examples of how they can be integrated into a CI/CD pipeline.",
+      btnAction: {
+        text: "View Details",
+        link: "/assignments/4",
+      },
+      resources: [
+        {
+          name: "Assignment Details.docx",
+          size: "24 KB",
+          link: "/assets/resources/assignment-details.docx",
+        },
+        {
+          name: "Grading Rubric.pdf",
+          size: "18 KB",
+          link: "/assets/resources/grading-rubric.pdf",
+        },
+      ],
     },
   ];
 
@@ -120,7 +174,10 @@ export default function Dash({ setActiveTab }: DashProps) {
             </button>
           </div>
           <div className="flex w-full justify-center items-center mx-auto p-3">
-            <AssignmentCards data={assignments} />
+            <AssignmentCards
+              data={assignments}
+              onViewDetails={() => setActiveTab("Assignments")}
+            />
           </div>
         </div>
       </div>

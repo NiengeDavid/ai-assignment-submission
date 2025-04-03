@@ -11,13 +11,23 @@ interface Assignment {
   course: string; // e.g., "SEN401 - Software Engineering Economics"
   title: string; // e.g., "Software Engineering Principles - Research Paper"
   question: string; // e.g., "Write a 5-page research paper..."
+  btnAction: {
+    text: string; // e.g., "View Details"
+    link: string; // e.g., "/assignments/1"
+  };
+  resources: {
+    name: string; // e.g., "Assignment Details.docx"
+    size: string; // e.g., "24 KB"
+    link: string; // e.g., "/assets/resources/assignment-details.docx"
+  }[]; //
 }
 
 interface AssignmentCardsProps {
   data: Assignment[];
+  onViewDetails: (assignment: Assignment) => void; // Callback for viewing details
 }
 
-export function AssignmentCards({ data }: AssignmentCardsProps) {
+export function AssignmentCards({ data, onViewDetails }: AssignmentCardsProps) {
   // Helper function to calculate the "dueIn" value
   const calculateDueIn = (dueDate: string): string => {
     const due = new Date(dueDate);
@@ -98,9 +108,12 @@ export function AssignmentCards({ data }: AssignmentCardsProps) {
             </p>
 
             {/* View Details Button */}
-            <button className="bg-blue-500  px-4 py-2 w-full text-center rounded-sm cursor-pointer text-white hover:bg-blue-400 text-sm font-medium">
-              View Details
-            </button>
+            <a
+              onClick={() => onViewDetails(assignment)}
+              className="bg-blue-500 px-4 py-2 w-full text-center rounded-sm cursor-pointer text-white hover:bg-blue-400 text-sm font-medium block"
+            >
+              {assignment.btnAction.text}
+            </a>
           </div>
         </div>
       ))}

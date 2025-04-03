@@ -7,9 +7,34 @@ import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import Dash from "@/containers/student/dash";
 import Assignments from "@/containers/student/assignments";
 
+interface Assignment {
+  id: string;
+  image: string;
+  lecturer: {
+    avatar: string;
+    name: string;
+  };
+  dueDate: string;
+  course: string;
+  title: string;
+  question: string;
+  btnAction: {
+    text: string;
+    link: string;
+  };
+  resources: {
+    name: string; // e.g., "Assignment Details.docx"
+    size: string; // e.g., "24 KB"
+    link: string; // e.g., "/assets/resources/assignment-details.docx"
+  }[]; //
+}
+
 export default function Page() {
   // State to track the active tab
   const [activeTab, setActiveTab] = useState("Dashboard");
+
+  const [selectedAssignment, setSelectedAssignment] =
+    useState<Assignment | null>(null);
 
   // Function to handle tab changes
   const handleTabChange = (tab: string) => {
@@ -44,7 +69,11 @@ export default function Page() {
               )}
               {activeTab === "Assignments" && (
                 <div className="px-4 lg:px-6">
-                  <Assignments setActiveTab={handleTabChange} />
+                  <Assignments
+                    setActiveTab={handleTabChange}
+                    selectedAssignment={selectedAssignment}
+                    setSelectedAssignment={setSelectedAssignment}
+                  />
                 </div>
               )}
               {activeTab === "Grades & Feedback" && (
