@@ -1,11 +1,39 @@
 import { SectionCards } from "@/components/section-cards";
 import { AssignmentCards } from "@/components/assignment-cards";
 
-interface DashProps {
-  setActiveTab: (tab: string) => void;
+interface Assignment {
+  id: string;
+  image: string;
+  lecturer: {
+    avatar: string;
+    name: string;
+  };
+  dueDate: string;
+  course: string;
+  title: string;
+  question: string;
+  btnAction: {
+    text: string;
+    link: string;
+  };
+  resources: {
+    name: string; // e.g., "Assignment Details.docx"
+    size: string; // e.g., "24 KB"
+    link: string; // e.g., "/assets/resources/assignment-details.docx"
+  }[]; //
 }
 
-export default function Dash({ setActiveTab }: DashProps) {
+interface DashProps {
+  setActiveTab: (tab: string) => void;
+  setSelectedAssignment: React.Dispatch<
+    React.SetStateAction<Assignment | null>
+  >;
+}
+
+export default function Dash({
+  setActiveTab,
+  setSelectedAssignment,
+}: DashProps) {
   const cardData: {
     title: string;
     description: string;
@@ -176,7 +204,10 @@ export default function Dash({ setActiveTab }: DashProps) {
           <div className="flex w-full justify-center items-center mx-auto p-3">
             <AssignmentCards
               data={assignments}
-              onViewDetails={() => setActiveTab("Assignments")}
+              onViewDetails={(assignment) => {
+                setSelectedAssignment(assignment); // Set the selected assignment
+                setActiveTab("Assignments"); // Switch to the Assignments tab
+              }}
             />
           </div>
         </div>

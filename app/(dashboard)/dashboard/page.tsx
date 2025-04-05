@@ -6,6 +6,7 @@ import { SiteHeader } from "@/components/site-header";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import Dash from "@/containers/student/dash";
 import Assignments from "@/containers/student/assignments";
+import Grades from "@/containers/student/grades";
 
 interface Assignment {
   id: string;
@@ -64,7 +65,10 @@ export default function Page() {
               {activeTab === "Dashboard" && (
                 <div className="px-4 lg:px-6">
                   {/* Add your dashboard content here */}
-                  <Dash setActiveTab={handleTabChange} />
+                  <Dash
+                    setActiveTab={handleTabChange}
+                    setSelectedAssignment={setSelectedAssignment}
+                  />
                 </div>
               )}
               {activeTab === "Assignments" && (
@@ -78,9 +82,8 @@ export default function Page() {
               )}
               {activeTab === "Grades & Feedback" && (
                 <div className="px-4 lg:px-6">
-                  <h2 className="text-xl font-bold">Grades & Feedback</h2>
-                  <p>Here you can view your grades and feedback.</p>
                   {/* Add your grades content here */}
+                  <Grades />
                 </div>
               )}
               {activeTab === "Notifications" && (
