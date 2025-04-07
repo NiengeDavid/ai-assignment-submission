@@ -20,6 +20,7 @@ interface Assignment {
     size: string; // e.g., "24 KB"
     link: string; // e.g., "/assets/resources/assignment-details.docx"
   }[]; //
+  gradeStatus?: string;
 }
 
 interface AssignmentCardsProps {

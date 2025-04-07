@@ -3,6 +3,15 @@
 import { useState } from "react";
 import { AssignmentCards } from "@/components/assignment-cards";
 import Image from "next/image";
+import { PieChart, Pie, Cell, Tooltip, Legend } from "recharts";
+
+const data = [
+  { name: "Content & Research", value: 70 },
+  { name: "Originality & Plagiarism Score", value: 20 },
+  { name: "Grammar & Formatting", value: 10 },
+];
+
+const COLORS = ["#3B82F6", "#60A5FA", "#93C5FD"]; // Blue shades
 
 interface Assignment {
   id: string;
@@ -24,28 +33,12 @@ interface Assignment {
     size: string;
     link: string;
   }[];
+  gradeStatus?: string;
 }
 
 export default function Grades() {
   const [selectedAssignment, setSelectedAssignment] =
     useState<Assignment | null>(null);
-
-  // Helper function to calculate the "dueIn" value
-  const calculateDueIn = (dueDate: string): string => {
-    const due = new Date(dueDate);
-    const now = new Date();
-    const diffInMs = due.getTime() - now.getTime();
-    const diffInDays = Math.ceil(diffInMs / (1000 * 60 * 60 * 24));
-
-    if (diffInDays > 0) {
-      return `${diffInDays} day${diffInDays > 1 ? "s" : ""} left`;
-    } else if (diffInDays === 0) {
-      return "Due today";
-    } else {
-      return "Overdue";
-    }
-  };
-
   // Helper function to format the due date
   const formatDueDate = (dueDate: string): string => {
     const date = new Date(dueDate);
@@ -85,6 +78,7 @@ export default function Grades() {
           link: "/assets/resources/grading-rubric.pdf",
         },
       ],
+      gradeStatus: "Successful",
     },
     {
       id: "2",
@@ -114,6 +108,7 @@ export default function Grades() {
           link: "/assets/resources/grading-rubric.pdf",
         },
       ],
+      gradeStatus: "Unsuccessful",
     },
     {
       id: "3",
@@ -143,6 +138,7 @@ export default function Grades() {
           link: "/assets/resources/grading-rubric.pdf",
         },
       ],
+      gradeStatus: "Unsuccessful",
     },
     {
       id: "4",
@@ -172,6 +168,7 @@ export default function Grades() {
           link: "/assets/resources/grading-rubric.pdf",
         },
       ],
+      gradeStatus: "Unsuccessful",
     },
   ];
 
@@ -198,7 +195,7 @@ export default function Grades() {
           </div>
 
           {/* Grades & Feedback Details */}
-          <div className="w-full bg-gray-200 px-4 py-6 m-6 mx-auto dark:bg-transparent">
+          <div className="w-full bg-gray-200 space-y-6 px-4 py-6 m-6 mx-auto dark:bg-transparent">
             {/* First Card */}
             <div className="bg-white dark:bg-bg2 p-6 rounded-lg shadow-md">
               {/* Assignment Title */}
@@ -211,8 +208,7 @@ export default function Grades() {
                 <div className="w-full flex flex-col justify-between gap-2">
                   <p className="text-lg font-semibold">Due Date:</p>
                   <p className="px-2 text-muted-foreground">
-                    {formatDueDate(selectedAssignment.dueDate)} (
-                    {calculateDueIn(selectedAssignment.dueDate)})
+                    {formatDueDate(selectedAssignment.dueDate)}
                   </p>
                   <hr className="border-t border-gray-300 mt-2" />
                 </div>
@@ -244,11 +240,77 @@ export default function Grades() {
                   <hr className="border-t border-gray-300 mt-2" />
                 </div>
                 <div className="w-full flex flex-col justify-between gap-2">
-                  <p className="text-lg font-semibold">Question:</p>
-                  <p className="px-2 text-muted-foreground">
-                    {selectedAssignment.question}
-                  </p>
+                  <p className="text-lg font-semibold">Grading Status:</p>
+                  <div className="flex px-2 items-center gap-1">
+                    <span
+                      className={`w-4 h-4 border rounded-full ${
+                        selectedAssignment.gradeStatus === "Successful"
+                          ? "border-bg5 bg-bg5"
+                          : "border-red-500 bg-red-500"
+                      }`}
+                    ></span>
+                    <p className="px-2 text-muted-foreground">
+                      {selectedAssignment.gradeStatus}
+                    </p>
+                  </div>
                   <hr className="border-t border-gray-300 mt-2" />
+                </div>
+              </div>
+            </div>
+
+            {/* Seconnd Card */}
+            <div className="bg-white dark:bg-bg2 p-6 rounded-lg shadow-md">
+              <h2 className="text-lg font-bold mb-4">Grade and Feedback:</h2>
+              <div className="flex flex-col mt-8 gap-6 mx-auto lg:flex-row">
+                {/* Left Section: Score and Feedback */}
+                <div className="flex-1 space-y-9">
+                  <div className="w-full flex flex-col justify-between gap-2">
+                    <p className="text-lg font-semibold">Total Score:</p>
+                    <p className="text-3xl font-bold text-muted-foreground">
+                      85 / 100
+                    </p>
+                  </div>
+
+                  <div className="w-full flex flex-col justify-between gap-2">
+                    <p className="font-semibold text-lg">Lecturer Feedback:</p>
+                    <p className="text-muted-foreground">
+                      Great job! Your research was well-structured, but ensure
+                      better citation formatting. Check the annotated file for
+                      details.
+                    </p>
+                  </div>
+
+                  <hr className="border-t border-gray-300 mt-2" />
+                </div>
+
+                {/* Right Section: Chart */}
+                <div className="bg-bg1 border border-blue-500 rounded-md flex-1 flex items-center justify-center">
+                  <PieChart width={240} height={240}>
+                    <Pie
+                      data={data}
+                      dataKey="value"
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={70} // creates the "doughnut hole"
+                      outerRadius={100}
+                      paddingAngle={2}
+                    >
+                      {data.map((entry, index) => (
+                        <Cell
+                          key={`cell-${index}`}
+                          fill={COLORS[index % COLORS.length]}
+                        />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                    <Legend
+                      layout="vertical"
+                      verticalAlign="middle"
+                      align="right"
+                      iconType="circle"
+                      wrapperStyle={{ fontSize: "12px", color: "#fff" }}
+                    />
+                  </PieChart>
                 </div>
               </div>
             </div>
