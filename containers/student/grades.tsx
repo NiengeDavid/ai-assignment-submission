@@ -258,62 +258,66 @@ export default function Grades() {
               </div>
             </div>
 
-            {/* Seconnd Card */}
-            <div className="bg-white dark:bg-bg2 p-6 rounded-lg shadow-md">
-              <h2 className="text-lg font-bold mb-4">Grade and Feedback:</h2>
-              <div className="flex flex-col mt-8 gap-6 mx-auto lg:flex-row">
-                {/* Left Section: Score and Feedback */}
-                <div className="flex-1 space-y-9">
-                  <div className="w-full flex flex-col justify-between gap-2">
-                    <p className="text-lg font-semibold">Total Score:</p>
-                    <p className="text-3xl font-bold text-muted-foreground">
-                      85 / 100
-                    </p>
+            {/* Second Card */}
+            {selectedAssignment.gradeStatus === "Successful" && (
+              <div className="bg-white dark:bg-bg2 p-6 rounded-lg shadow-md">
+                <h2 className="text-lg font-bold mb-4">Grade and Feedback:</h2>
+                <div className="flex flex-col mt-8 gap-6 mx-auto lg:flex-row">
+                  {/* Left Section: Score and Feedback */}
+                  <div className="flex-1 space-y-9">
+                    <div className="w-full flex flex-col justify-between gap-2">
+                      <p className="text-lg font-semibold">Total Score:</p>
+                      <p className="text-3xl font-bold text-white">
+                        85 / 100
+                      </p>
+                    </div>
+
+                    <div className="w-full flex flex-col justify-between gap-2">
+                      <p className="font-semibold text-lg">
+                        Lecturer Feedback:
+                      </p>
+                      <p className="text-muted-foreground">
+                        Great job! Your research was well-structured, but ensure
+                        better citation formatting. Check the annotated file for
+                        details.
+                      </p>
+                    </div>
+
+                    <hr className="border-t border-gray-300 mt-2" />
                   </div>
 
-                  <div className="w-full flex flex-col justify-between gap-2">
-                    <p className="font-semibold text-lg">Lecturer Feedback:</p>
-                    <p className="text-muted-foreground">
-                      Great job! Your research was well-structured, but ensure
-                      better citation formatting. Check the annotated file for
-                      details.
-                    </p>
+                  {/* Right Section: Chart */}
+                  <div className="bg-bg1 border border-blue-500 rounded-md flex-1 flex items-center justify-center">
+                    <PieChart width={240} height={240}>
+                      <Pie
+                        data={data}
+                        dataKey="value"
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={70} // creates the "doughnut hole"
+                        outerRadius={100}
+                        paddingAngle={2}
+                      >
+                        {data.map((entry, index) => (
+                          <Cell
+                            key={`cell-${index}`}
+                            fill={COLORS[index % COLORS.length]}
+                          />
+                        ))}
+                      </Pie>
+                      <Tooltip />
+                      <Legend
+                        layout="vertical"
+                        verticalAlign="middle"
+                        align="right"
+                        iconType="circle"
+                        wrapperStyle={{ fontSize: "12px", color: "#fff" }}
+                      />
+                    </PieChart>
                   </div>
-
-                  <hr className="border-t border-gray-300 mt-2" />
-                </div>
-
-                {/* Right Section: Chart */}
-                <div className="bg-bg1 border border-blue-500 rounded-md flex-1 flex items-center justify-center">
-                  <PieChart width={240} height={240}>
-                    <Pie
-                      data={data}
-                      dataKey="value"
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={70} // creates the "doughnut hole"
-                      outerRadius={100}
-                      paddingAngle={2}
-                    >
-                      {data.map((entry, index) => (
-                        <Cell
-                          key={`cell-${index}`}
-                          fill={COLORS[index % COLORS.length]}
-                        />
-                      ))}
-                    </Pie>
-                    <Tooltip />
-                    <Legend
-                      layout="vertical"
-                      verticalAlign="middle"
-                      align="right"
-                      iconType="circle"
-                      wrapperStyle={{ fontSize: "12px", color: "#fff" }}
-                    />
-                  </PieChart>
                 </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
       ) : (
