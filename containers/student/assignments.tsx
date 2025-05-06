@@ -199,7 +199,7 @@ export default function Assignments({
               </a>
               {" "}&gt; &gt;{" "}
               <span className="font-semibold lg:text-2xl">
-                {selectedAssignment.course}
+                {selectedAssignment.title}
               </span>
             </div>
             <Button className="bg-blue-500 hover:bg-blue-400 text-white font-medium px-4 py-2 cursor-pointer">
