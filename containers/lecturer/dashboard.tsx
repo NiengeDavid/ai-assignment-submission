@@ -8,8 +8,10 @@ import Dash from "@/containers/student/dash";
 import Assignments from "@/containers/student/assignments";
 import Grades from "@/containers/student/grades";
 import { type Assignment } from "@/sanity/lib/sanity.queries";
+import LectDash from "./dash";
+import LectAssignments from "./assignments";
 
-export default function StudentDashboardPage() {
+export default function LecturerDashboardPage() {
   // State to track the active tab
   const [activeTab, setActiveTab] = useState("Dashboard");
 
@@ -44,15 +46,12 @@ export default function StudentDashboardPage() {
               {activeTab === "Dashboard" && (
                 <div className="px-4 lg:px-6">
                   {/* Add your dashboard content here */}
-                  <Dash
-                    setActiveTab={handleTabChange}
-                    setSelectedAssignment={setSelectedAssignment}
-                  />
+                  <LectDash setActiveTab={handleTabChange} />
                 </div>
               )}
               {activeTab === "Assignments" && (
                 <div className="px-4 lg:px-6">
-                  <Assignments
+                  <LectAssignments
                     setActiveTab={handleTabChange}
                     selectedAssignment={selectedAssignment}
                     setSelectedAssignment={setSelectedAssignment}

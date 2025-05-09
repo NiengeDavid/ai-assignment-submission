@@ -523,14 +523,26 @@ export default function SignUpPage() {
                 render={({ field }) => (
                   <FormItem className="mb-4">
                     <FormLabel>Faculty</FormLabel>
-                    <FormControl>
-                      <Input
-                        className="enabled:hover:border-blue-600 disabled:opacity-75"
-                        placeholder="Faculty"
-                        {...field}
-                        required
-                      />
-                    </FormControl>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger className="w-full enabled:hover:border-blue-600 disabled:opacity-75">
+                          <SelectValue placeholder="Select your faculty" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent className="bg-bg1">
+                        {faculties.map((faculty) => (
+                          <SelectItem
+                            key={faculty._id}
+                            value={faculty.name || ""}
+                          >
+                            {faculty.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -541,14 +553,26 @@ export default function SignUpPage() {
                 render={({ field }) => (
                   <FormItem className="mb-4">
                     <FormLabel>Department</FormLabel>
-                    <FormControl>
-                      <Input
-                        className="enabled:hover:border-blue-600 disabled:opacity-75"
-                        placeholder="Department"
-                        {...field}
-                        required
-                      />
-                    </FormControl>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger className="w-full enabled:hover:border-blue-600 disabled:opacity-75">
+                          <SelectValue placeholder="Select your department" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent className="bg-bg1">
+                        {departments.map((department) => (
+                          <SelectItem
+                            key={department._id}
+                            value={department.name || ""}
+                          >
+                            {department.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}

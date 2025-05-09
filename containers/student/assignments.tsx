@@ -1,30 +1,15 @@
+"use client";
+
+import { useState, useEffect } from "react";
 import { AssignmentCards } from "@/components/assignment-cards";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import { FaFileAlt, FaDownload } from "react-icons/fa";
+import { readToken } from "@/sanity/lib/sanity.api";
+import { getClient, getAllAssignment } from "@/sanity/lib/sanity.client";
+import { type Assignment } from "@/sanity/lib/sanity.queries";
 
-interface Assignment {
-  id: string;
-  image: string;
-  lecturer: {
-    avatar: string;
-    name: string;
-  };
-  dueDate: string;
-  course: string;
-  title: string;
-  question: string;
-  btnAction: {
-    text: string;
-    link: string;
-  };
-  resources: {
-    name: string; // e.g., "Assignment Details.docx"
-    size: string; // e.g., "24 KB"
-    link: string; // e.g., "/assets/resources/assignment-details.docx"
-  }[]; //
-  gradeStatus?: string;
-}
+const avatar = "/assets/avatars/lecturer1.png";
 interface AssignmentsProps {
   setActiveTab: (tab: string) => void;
   selectedAssignment: Assignment | null;
@@ -38,6 +23,28 @@ export default function Assignments({
   selectedAssignment,
   setSelectedAssignment,
 }: AssignmentsProps) {
+  const client = getClient({ token: readToken });
+  const [assignments, setAssignments] = useState<Assignment[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      setIsLoading(true); // Start loading
+      try {
+        const assignmentsData = await getAllAssignment(client);
+        setAssignments(assignmentsData);
+      } catch (error) {
+        console.error("Error fetching galleries:", error);
+      } finally {
+        setIsLoading(false); // End loading
+      }
+    };
+
+    fetchData();
+    // console.log("Departments:", departments);
+    // console.log("Faculties:", faculties);
+  }, []);
+
   // Helper function to calculate the "dueIn" value
   const calculateDueIn = (dueDate: string): string => {
     const due = new Date(dueDate);
@@ -64,124 +71,13 @@ export default function Assignments({
     }).format(date);
   };
 
-  const assignments = [
-    {
-      id: "1",
-      image: "/assets/assignment1.png",
-      lecturer: {
-        avatar: "/assets/avatars/lecturer1.png",
-        name: "Dr. John Doe",
-      },
-      dueDate: "2025-04-10",
-      course: "SEN401 - Software Engineering Economics",
-      title: "Software Engineering Principles - Research Paper",
-      question:
-        "Write a 5-page research paper on the principles of Software Engineering, focusing on scalability, maintainability, and security. Provide real-world examples and cite at least three academic sources.",
-      btnAction: {
-        text: "View Details",
-        link: "/assignments/1",
-      },
-      resources: [
-        {
-          name: "Assignment Details.docx",
-          size: "24 KB",
-          link: "/assets/resources/assignment-details.docx",
-        },
-        {
-          name: "Grading Rubric.pdf",
-          size: "18 KB",
-          link: "/assets/resources/grading-rubric.pdf",
-        },
-      ],
-    },
-    {
-      id: "2",
-      image: "/assets/assignment1.png",
-      lecturer: {
-        avatar: "/assets/avatars/lecturer1.png",
-        name: "Prof. Jane Smith",
-      },
-      dueDate: "2025-04-09",
-      course: "SEN402 - Advanced Software Design",
-      title: "Design Patterns - Case Study",
-      question:
-        "Analyze the use of design patterns in a real-world software project. Focus on patterns like Singleton, Factory, and Observer. Provide examples and discuss their impact on the project's scalability and maintainability.",
-      btnAction: {
-        text: "View Details",
-        link: "/assignments/2",
-      },
-      resources: [
-        {
-          name: "Assignment Details.docx",
-          size: "24 KB",
-          link: "/assets/resources/assignment-details.docx",
-        },
-        {
-          name: "Grading Rubric.pdf",
-          size: "18 KB",
-          link: "/assets/resources/grading-rubric.pdf",
-        },
-      ],
-    },
-    {
-      id: "3",
-      image: "/assets/assignment1.png",
-      lecturer: {
-        avatar: "/assets/avatars/lecturer1.png",
-        name: "Dr. Emily White",
-      },
-      dueDate: "2025-04-05",
-      course: "SEN403 - Software Testing",
-      title: "Automated Testing Frameworks",
-      question:
-        "Research and compare two popular automated testing frameworks. Discuss their features, advantages, and limitations. Provide examples of how they can be integrated into a CI/CD pipeline.",
-      btnAction: {
-        text: "View Details",
-        link: "/assignments/3",
-      },
-      resources: [
-        {
-          name: "Assignment Details.docx",
-          size: "24 KB",
-          link: "/assets/resources/assignment-details.docx",
-        },
-        {
-          name: "Grading Rubric.pdf",
-          size: "18 KB",
-          link: "/assets/resources/grading-rubric.pdf",
-        },
-      ],
-    },
-    {
-      id: "4",
-      image: "/assets/assignment1.png",
-      lecturer: {
-        avatar: "/assets/avatars/lecturer1.png",
-        name: "Dr. Emily White",
-      },
-      dueDate: "2025-04-05",
-      course: "SEN403 - Software Testing",
-      title: "Automated Testing Frameworks",
-      question:
-        "Research and compare two popular automated testing frameworks. Discuss their features, advantages, and limitations. Provide examples of how they can be integrated into a CI/CD pipeline.",
-      btnAction: {
-        text: "View Details",
-        link: "/assignments/4",
-      },
-      resources: [
-        {
-          name: "Assignment Details.docx",
-          size: "24 KB",
-          link: "/assets/resources/assignment-details.docx",
-        },
-        {
-          name: "Grading Rubric.pdf",
-          size: "18 KB",
-          link: "/assets/resources/grading-rubric.pdf",
-        },
-      ],
-    },
-  ];
+  // Helper function to format resource file size
+  const formatFileSize = (sizeInBytes: number): string => {
+    if (sizeInBytes < 1024) return `${sizeInBytes} B`;
+    if (sizeInBytes < 1024 * 1024)
+      return `${(sizeInBytes / 1024).toFixed(2)} KB`;
+    return `${(sizeInBytes / (1024 * 1024)).toFixed(2)} MB`;
+  };
 
   return (
     <div className="bg-transparent w-full py-6 mx-auto space-y-6">
@@ -196,8 +92,8 @@ export default function Assignments({
                 className="font-semibold text-black/50 dark:text-txt1 lg:text-xl cursor-pointer hover:underline"
               >
                 Assignments
-              </a>
-              {" "}&gt; &gt;{" "}
+              </a>{" "}
+              &gt; &gt;{" "}
               <span className="font-semibold lg:text-2xl">
                 {selectedAssignment.title}
               </span>
@@ -239,14 +135,17 @@ export default function Assignments({
                   <p className="text-lg font-semibold">Lecturer:</p>
                   <div className="flex px-2 items-center gap-2">
                     <Image
-                      src={selectedAssignment.lecturer.avatar}
-                      alt={selectedAssignment.lecturer.name}
+                      src={selectedAssignment.lecturer?.avatar || avatar}
+                      alt={
+                        selectedAssignment.lecturer?.fullName ||
+                        "Lecturer's avatar"
+                      }
                       width={24}
                       height={24}
                       className="rounded-full"
                     />
                     <p className="text-sm text-muted-foreground">
-                      {selectedAssignment.lecturer.name}
+                      {selectedAssignment.lecturer?.fullName}
                     </p>
                   </div>
                   <hr className="border-t border-gray-300 mt-2" />
@@ -275,14 +174,18 @@ export default function Assignments({
                       <div className="flex items-center gap-4">
                         <FaFileAlt className="text-blue-500" />
                         <div>
-                          <p className="text-sm font-medium">{resource.name}</p>
+                          <p className="text-sm font-medium">
+                            {resource.fileName}
+                          </p>
                           <p className="text-xs text-muted-foreground">
-                            {resource.size}
+                            {formatFileSize(resource?.fileSize ?? 0)}
                           </p>
                         </div>
                       </div>
                       <a
-                        href={resource.link}
+                        href={resource.fileUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
                         download
                         className="text-blue-500 hover:text-blue-400 cursor-pointer"
                       >

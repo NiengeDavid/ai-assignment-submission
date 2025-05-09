@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/input-otp";
 
 const Bg = "/assets/bg.png";
-const SchoolLogo = "/assets/full-logo.png"; // school logo path
+const SchoolLogo = "/assets/school-logo.png"; // school logo path
 
 export default function VerifyEmailPage() {
   const [code, setCode] = useState(""); // For verification code input

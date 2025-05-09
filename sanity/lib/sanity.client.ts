@@ -6,6 +6,8 @@ import {
   useCdn,
 } from "@/sanity/lib/sanity.api";
 import {
+  type Assignment,
+  assignmentQuery,
   // indexQuery,
   // type Post,
   // postAndMoreStoriesQuery,
@@ -17,6 +19,8 @@ import {
   facultyQuery,
   type Department,
   type Faculty,
+  type User,
+  userbyIdQuery,
 } from "@/sanity/lib/sanity.queries";
 import { createClient, type SanityClient } from "next-sanity";
 
@@ -53,6 +57,22 @@ export async function getAllFaculties(
   return (await client.fetch(facultyQuery)) || [];
 }
 
+export async function getAllAssignment(
+  client: SanityClient
+): Promise<Assignment[]> {
+  return (await client.fetch(assignmentQuery)) || [];
+}
+
+export async function getUserById(
+  client: SanityClient,
+  userId: string
+): Promise<User> {
+  return (await client.fetch(userbyIdQuery, { userId })) || ({} as any);
+}
+
+export async function deleteAssignment(client: SanityClient, id: string) {
+  return client.delete(id);
+}
 //   export async function getSettings(client: SanityClient): Promise<Settings> {
 //     return (await client.fetch(settingsQuery)) || {}
 //   }

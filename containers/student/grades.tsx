@@ -4,6 +4,9 @@ import { useState } from "react";
 import { AssignmentCards } from "@/components/assignment-cards";
 import Image from "next/image";
 import { PieChart, Pie, Cell, Tooltip, Legend } from "recharts";
+import { type Assignment } from "@/sanity/lib/sanity.queries";
+
+const avatar = "/assets/avatars/lecturer1.png";
 
 const data = [
   { name: "Content & Research", value: 70 },
@@ -12,29 +15,6 @@ const data = [
 ];
 
 const COLORS = ["#3B82F6", "#60A5FA", "#93C5FD"]; // Blue shades
-
-interface Assignment {
-  id: string;
-  image: string;
-  lecturer: {
-    avatar: string;
-    name: string;
-  };
-  dueDate: string;
-  course: string;
-  title: string;
-  question: string;
-  btnAction: {
-    text: string;
-    link: string;
-  };
-  resources: {
-    name: string;
-    size: string;
-    link: string;
-  }[];
-  gradeStatus?: string;
-}
 
 export default function Grades() {
   const [selectedAssignment, setSelectedAssignment] =
@@ -227,14 +207,14 @@ export default function Grades() {
                   <p className="text-lg font-semibold">Lecturer:</p>
                   <div className="flex px-2 items-center gap-2">
                     <Image
-                      src={selectedAssignment.lecturer.avatar}
-                      alt={selectedAssignment.lecturer.name}
+                      src={selectedAssignment.lecturer?.avatar || avatar}
+                      alt={selectedAssignment.lecturer?.fullName || "lecturer's avatar"}
                       width={24}
                       height={24}
                       className="rounded-full"
                     />
                     <p className="text-sm text-muted-foreground">
-                      {selectedAssignment.lecturer.name}
+                      {selectedAssignment.lecturer?.fullName}
                     </p>
                   </div>
                   <hr className="border-t border-gray-300 mt-2" />
@@ -267,9 +247,7 @@ export default function Grades() {
                   <div className="flex-1 space-y-9">
                     <div className="w-full flex flex-col justify-between gap-2">
                       <p className="text-lg font-semibold">Total Score:</p>
-                      <p className="text-3xl font-bold text-white">
-                        85 / 100
-                      </p>
+                      <p className="text-3xl font-bold text-white">85 / 100</p>
                     </div>
 
                     <div className="w-full flex flex-col justify-between gap-2">

@@ -28,15 +28,25 @@ export const assignmentType = defineType({
       description: "E.g., SEN401 - Software Engineering Economics",
     }),
     defineField({
+      name: "image",
+      title: "Assignment Cover Image",
+      type: "image",
+      options: {
+        hotspot: true, // Enables image cropping and focal point selection
+      },
+      description: "Upload a cover image for the assignment.",
+    }),
+    defineField({
       name: "lecturer", // The creator of the assignment
       title: "Lecturer",
       type: "reference",
       to: [{ type: "user" }],
       options: {
-        filter: 'role == "lecturer"',
+        filter: 'role == "lecturer"', // Assuming you have a role field in your user schema
+        filterParams: { role: "lecturer" },
       },
       validation: (Rule) => Rule.required(),
-      readOnly: true,
+      description: "Lecturer who created this assignment.",
     }),
     defineField({
       name: "department",
@@ -137,7 +147,7 @@ export const assignmentType = defineType({
     select: {
       title: "title",
       course: "course",
-      lecturerName: "lecturer.name",
+      lecturerName: "lecturer.fullName",
       departmentName: "department.name", // Assuming your department schema has a 'name' field for preview
       level: "level",
     },

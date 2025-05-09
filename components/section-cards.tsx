@@ -12,7 +12,7 @@ interface CardData {
   value: string;
   trendValue: string;
   footerText: string;
-  footerDescription: string;
+  footerDescription?: string;
 }
 
 interface SectionCardsProps {
@@ -35,7 +35,7 @@ export function SectionCards({ data }: SectionCardsProps) {
               {card.footerText}
             </div>
             <div className="text-muted-foreground">
-              {card.footerDescription}
+              {card?.footerDescription || ""}
             </div>
           </CardFooter>
         </Card>

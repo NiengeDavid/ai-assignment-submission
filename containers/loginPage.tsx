@@ -1,4 +1,6 @@
 "use client";
+
+import { useRef } from "react";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -19,6 +21,9 @@ import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { useSignIn, useUser, useClerk } from "@clerk/nextjs"; // Clerk hooks
 import { useRouter } from "next/navigation"; // For redirecting
 import { toast } from "sonner";
+import { getClient, getUserById } from "@/sanity/lib/sanity.client";
+import { readToken } from "@/sanity/lib/sanity.api";
+import { type User } from "@/sanity/lib/sanity.queries";
 
 const Bg = "/assets/bg.png";
 const SchoolLogo = "/assets/school-logo.png"; // school logo path
@@ -35,11 +40,15 @@ export default function LoginPage() {
   const [isSubmitting, setIsSubmitting] = useState(false); // For loading state
   const [error, setError] = useState(""); // For error messages
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+  const [isLoading, setIsLoading] = useState(false); // For loading state
+  const [userData, setUserData] = useState<User>();
+  const client = getClient({ token: readToken });
 
-  const { isSignedIn, isLoaded: isUserLoaded } = useUser();
+  const { isSignedIn, isLoaded: isUserLoaded, user } = useUser();
   const { signIn, setActive, isLoaded: isSignInLoaded } = useSignIn(); // Clerk sign-in hook
   const { redirectToSignIn } = useClerk(); // Clerk redirect hook
   const router = useRouter(); // For redirecting
+  const isProcessing = useRef(false);
 
   const form = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
@@ -49,16 +58,38 @@ export default function LoginPage() {
     },
   });
 
-  // 2. Effects after all hooks
-  // Redirect if already signed in
+  //Fetching user data from Sanity if already signed in
   useEffect(() => {
-    if (isUserLoaded && isSignInLoaded) {
-      if (isSignedIn) {
-        router.push("/dashboard");
-      }
-      setIsCheckingAuth(false);
+    if (isSignedIn && user?.id) {
+      // console.log("Current user object:", user);
+      // console.log("User ID property:", user.id);
+
+      const fetchData = async () => {
+        setIsLoading(true); // Start loading
+        try {
+          // console.log("User ID:", user.id);
+          const fetchedUserData = await getUserById(client, user.id);
+          setUserData(fetchedUserData);
+          // console.log("Fetched user data:", fetchedUserData);
+        } catch (error) {
+          console.error("Error fetching Users:", error);
+        } finally {
+          setIsLoading(false); // End loading
+        }
+      };
+
+      fetchData();
     }
-  }, [isSignedIn, isUserLoaded, isSignInLoaded, router]);
+  }, [isSignedIn, user?.id, client]);
+
+  // 2. Effects after all hooks
+  // Redirect if already signed in and userData is available
+  useEffect(() => {
+    if (isUserLoaded && isSignInLoaded && isSignedIn && userData) {
+      router.push(`/dashboard/${userData.role}`); // Redirect to the user's dashboard
+    }
+    setIsCheckingAuth(false);
+  }, [isSignedIn, isUserLoaded, isSignInLoaded, userData, router]);
 
   // 3. Conditional rendering (never before hooks)
   if (isCheckingAuth) {
@@ -70,34 +101,77 @@ export default function LoginPage() {
   }
 
   const onSubmit = async (data: z.infer<typeof loginSchema>) => {
-    setIsSubmitting(true); // Start loading
-    setError(""); // Clear previous errors
+    // Prevent duplicate submissions
+    if (isProcessing.current) return;
+    isProcessing.current = true;
+
+    setIsSubmitting(true);
+    setIsLoading(true);
+    setError("");
 
     try {
-      // Attempt to sign in
-      if (signIn) {
-        const result = await signIn.create({
-          identifier: data.email,
-          password: data.password,
-        });
-
-        if (result.status === "complete") {
-          // Set the user as active and redirect to the dashboard
-          await setActive({ session: result.createdSessionId });
-          router.push("/dashboard");
-        }
-      } else {
-        setError("Sign-in service is unavailable.");
+      setIsLoading(true);
+      if (!signIn) {
+        throw new Error("Sign-in service is unavailable.");
       }
+
+      // 2. Attempt to sign in
+      const result = await signIn.create({
+        identifier: data.email,
+        password: data.password,
+      });
+
+      if (result.status !== "complete") {
+        throw new Error("Sign-in failed. Please try again.");
+      }
+
+      // 3. Set active session
+      await setActive({ session: result.createdSessionId });
+
+      // 4. Fetch user data from Sanity
+      const userId = result.id;
+      if (!userId) {
+        throw new Error("User session could not be established.");
+      }
+
+      const client = getClient({ token: readToken });
+      const userData = await getUserById(client, userId);
+
+      // 5. Process user data
+      // if (!userData?.role) {
+      //   throw new Error("User role not found. Please contact support.");
+      // }
+
+      // 6. Redirect based on role
+      const roleRedirects = {
+        student: "/dashboard/student",
+        lecturer: "/dashboard/lecturer",
+        admin: "/dashboard/admin",
+        superadmin: "/dashboard/superadmin",
+      };
+
+      const redirectPath =
+        roleRedirects[userData.role as keyof typeof roleRedirects] ||
+        "/unauthorized";
+      router.push(redirectPath);
     } catch (err: any) {
       console.error("Login error:", err);
-      setError(err.errors[0].message); // Display error message
-      toast("Uh oh! Wrong password or email .", {
-        description: "Check and try again!",
-        closeButton: true,
-      });
+      const errorMessage =
+        err.errors?.[0]?.message ||
+        err.message ||
+        "An unexpected error occurred.";
+
+      setError(errorMessage);
+
+      if (errorMessage.includes("password") || errorMessage.includes("email")) {
+        toast("Uh oh! Wrong password or email.", {
+          description: "Check and try again!",
+          closeButton: true,
+        });
+      }
     } finally {
-      setIsSubmitting(false); // Stop loading
+      setIsSubmitting(false);
+      setIsLoading(false);
     }
   };
 
@@ -137,6 +211,13 @@ export default function LoginPage() {
               effortlessly.
             </p>
           </div>
+
+          {isLoading ? (
+            <div className="fixed inset-0 bg-white/80 text-black dark:bg-bg2 dark:text-white flex items-center justify-center z-50">
+              <Loader2 className="h-4 w-4  animate-spin" />
+              <p className="ml-2">Verifying your credentials...</p>
+            </div>
+          ) : null}
 
           {/* Email Field */}
           <FormField

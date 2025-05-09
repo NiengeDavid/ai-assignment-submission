@@ -1,27 +1,8 @@
 import Image from "next/image";
+import { type Assignment } from "@/sanity/lib/sanity.queries";
 
-interface Assignment {
-  id: string;
-  image: string;
-  lecturer: {
-    avatar: string;
-    name: string;
-  };
-  dueDate: string; // e.g., "March 10, 2025"
-  course: string; // e.g., "SEN401 - Software Engineering Economics"
-  title: string; // e.g., "Software Engineering Principles - Research Paper"
-  question: string; // e.g., "Write a 5-page research paper..."
-  btnAction: {
-    text: string; // e.g., "View Details"
-    link: string; // e.g., "/assignments/1"
-  };
-  resources: {
-    name: string; // e.g., "Assignment Details.docx"
-    size: string; // e.g., "24 KB"
-    link: string; // e.g., "/assets/resources/assignment-details.docx"
-  }[]; //
-  gradeStatus?: string;
-}
+const bgimage = "/assets/assignment1.png";
+const avatar = "/assets/avatars/lecturer1.png";
 
 interface AssignmentCardsProps {
   data: Assignment[];
@@ -59,13 +40,13 @@ export function AssignmentCards({ data, onViewDetails }: AssignmentCardsProps) {
     <div className="grid grid-cols-1 gap-6 mx-auto lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
       {data.map((assignment) => (
         <div
-          key={assignment.id}
+          key={assignment._id}
           className="bg-white dark:bg-bg2 shadow-md rounded-lg overflow-hidden max-w-sm mx-auto"
         >
           {/* Assignment Image */}
           <div className="w-full">
             <Image
-              src={assignment.image}
+              src={assignment?.image || bgimage}
               alt={assignment.title}
               className="h-full w-full"
               width={344}
@@ -79,14 +60,18 @@ export function AssignmentCards({ data, onViewDetails }: AssignmentCardsProps) {
             {/* Lecturer Details and Due Date */}
             <div className="flex items-center gap-1 justify-between text-sm text-muted-foreground dark:text-white mb-4">
               <div className="flex items-center gap-2">
-                <Image
-                  src={assignment.lecturer.avatar}
-                  alt={assignment.lecturer.name}
-                  width={24}
-                  height={24}
-                  className="rounded-full"
-                />
-                <span>{assignment.lecturer.name}</span>
+                {assignment?.lecturer && (
+                  <>
+                    <Image
+                      src={assignment.lecturer?.avatar || avatar}
+                      alt={assignment.lecturer.fullName}
+                      width={24}
+                      height={24}
+                      className="rounded-full"
+                    />
+                    <span>{assignment.lecturer.fullName}</span>
+                  </>
+                )}
               </div>
               <span>•</span>
               <span className="flex items-center gap-1">
@@ -113,7 +98,7 @@ export function AssignmentCards({ data, onViewDetails }: AssignmentCardsProps) {
               onClick={() => onViewDetails(assignment)}
               className="bg-blue-500 px-4 py-2 w-full text-center rounded-sm cursor-pointer text-white hover:bg-blue-400 text-sm font-medium block"
             >
-              {assignment.btnAction.text}
+              View details
             </a>
           </div>
         </div>

@@ -19,6 +19,40 @@ export const facultyQuery = groq`
 export const departmentQuery = groq`
 *[_type == "department"] | order(_updatedAt desc)`;
 
+export const assignmentQuery = groq`*[_type == "assignment"]{
+  _id,
+  _createdAt,
+  title,
+  assignmentId,
+  course,
+  "image": image.asset->url,
+  "lecturer": lecturer->{
+    _id,
+    fullName,
+    "avatar": image.asset->url
+  },
+  "department": department->{
+    _id,
+    name
+  },
+  level,
+  dueDate,
+  question,
+  resources[]{
+    displayName,
+    "fileUrl": file.asset->url,
+    "fileName": file.asset->originalFilename, // Missing comma added here
+    "fileSize": file.asset->size
+  }
+}`;
+
+export const userbyIdQuery = groq`
+  *[_type == "user" && userId == $userId][0]{
+    userId,
+    role,
+  }
+`;
+
 // export const indexQuery = groq`
 // *[_type == "post"] | order(date desc, _updatedAt desc) {
 //   ${postFields}
@@ -82,4 +116,36 @@ export interface Faculty {
   _id: string;
   name?: string;
   code?: string;
+}
+
+export interface Assignment {
+  _id: string;
+  _createdAt: string;
+  title: string;
+  assignmentId: string;
+  course: string;
+  image?: string; // URL of the assignment cover image
+  lecturer?: {
+    _id: string;
+    fullName: string;
+    avatar?: string; // URL of the lecturer's avatar
+  };
+  department?: {
+    _id: string;
+    name: string;
+  };
+  level: string; // e.g., "100", "200", "300", "400"
+  dueDate: string; // ISO date string
+  question: string; // Assignment question or description
+  resources: {
+    displayName: string;
+    fileUrl: string; // URL of the file
+    fileName: string; // Original filename of the file
+    fileSize?: number;
+  }[];
+}
+
+export interface User {
+  _id: string;
+  role: string;
 }
