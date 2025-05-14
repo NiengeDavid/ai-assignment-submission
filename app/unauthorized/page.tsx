@@ -10,7 +10,7 @@ export default function UnauthorizedPage() {
     "Hello,\n\nI encountered an unauthorized access message when trying to view a page. Can you help?\n\nDetails:";
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex flex-col items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-bg2 to-gray-100 flex flex-col items-center justify-center p-4">
       <div className="max-w-md w-full bg-white rounded-xl shadow-lg overflow-hidden p-8 text-center">
         <div className="flex justify-center mb-6">
           <div className="p-4 bg-red-100 rounded-full">

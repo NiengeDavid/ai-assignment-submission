@@ -80,7 +80,7 @@ export default function LoginPage() {
 
       fetchData();
     }
-  }, [isSignedIn, user?.id, client]);
+  }, [isSignedIn, user?.id]);
 
   // 2. Effects after all hooks
   // Redirect if already signed in and userData is available
