@@ -10,8 +10,11 @@ import {
   getClient,
   getAllAssignment,
   deleteAssignment,
+  updateAssignmentWithResources,
+  uploadFileToSanity,
+  getAllDepartments,
 } from "@/sanity/lib/sanity.client";
-import { type Assignment } from "@/sanity/lib/sanity.queries";
+import { Department, type Assignment } from "@/sanity/lib/sanity.queries";
 import { toast } from "sonner";
 import {
   AlertDialog,
@@ -45,6 +48,8 @@ import {
   SelectContent,
   SelectItem,
 } from "@/components/ui/select";
+import CreateAssignment from "@/containers/lecturer/CreateAssignment";
+import { useUser } from "@clerk/nextjs";
 
 const avatar = "/assets/avatars/lecturer1.png";
 
@@ -82,13 +87,20 @@ export default function LectAssignments({
 }: AssignmentsProps) {
   const client = getClient({ token: writeToken });
   const [assignments, setAssignments] = useState<Assignment[]>([]);
+  const [departments, setDepartments] = useState<Department[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [assignmentToDelete, setAssignmentToDelete] = useState<string | null>(
     null
   );
   const [isEditing, setIsEditing] = useState(false);
+  const [isCreating, setIsCreating] = useState(false); // New state for creating assignments
+  const { user } = useUser();
   //   const { toast } = useToast();
+
+  const currenctUserId = user?.id || ""; // Get the current user's ID
+  const lecturerId = `user-${currenctUserId}`;
+  console.log("Lecturer ID:", lecturerId);
 
   // Initialize form
   const form = useForm<z.infer<typeof assignmentFormSchema>>({
@@ -96,7 +108,9 @@ export default function LectAssignments({
     defaultValues: {
       title: selectedAssignment?.title || "",
       course: selectedAssignment?.course || "",
-      dueDate: selectedAssignment?.dueDate || "",
+      dueDate: selectedAssignment?.dueDate
+        ? sanityToInputDatetime(selectedAssignment.dueDate)
+        : "",
       question: selectedAssignment?.question || "",
       department: selectedAssignment?.department?.name || "",
       level: selectedAssignment?.level || "",
@@ -131,7 +145,11 @@ export default function LectAssignments({
   const fetchAssignments = async () => {
     setIsLoading(true);
     try {
-      const assignmentsData = await getAllAssignment(client);
+      const [assignmentsData, departmentsData] = await Promise.all([
+        getAllAssignment(client),
+        getAllDepartments(client),
+      ]);
+      setDepartments(departmentsData);
       setAssignments(assignmentsData);
     } catch (error) {
       console.error("Error fetching assignments:", error);
@@ -146,6 +164,36 @@ export default function LectAssignments({
   useEffect(() => {
     fetchAssignments();
   }, []);
+
+  // Convert Sanity datetime to input format
+  function sanityToInputDatetime(sanityDatetime: string): string {
+    if (!sanityDatetime) return "";
+
+    // Create a Date object from the Sanity datetime
+    const date = new Date(sanityDatetime);
+
+    // Check if the date is valid
+    if (isNaN(date.getTime())) return "";
+
+    // Format as YYYY-MM-DDTHH:mm for datetime-local input
+    const pad = (num: number) => num.toString().padStart(2, "0");
+    const year = date.getFullYear();
+    const month = pad(date.getMonth() + 1);
+    const day = pad(date.getDate());
+    const hours = pad(date.getHours());
+    const minutes = pad(date.getMinutes());
+
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
+  }
+
+  // Convert input format to Sanity datetime
+  function inputToSanityDatetime(inputDatetime: string): string {
+    if (!inputDatetime) return "";
+
+    // datetime-local input gives us YYYY-MM-DDTHH:mm
+    // Convert to full ISO string
+    return new Date(inputDatetime).toISOString();
+  }
 
   const handleDeleteClick = (assignmentId: string) => {
     setAssignmentToDelete(assignmentId);
@@ -175,13 +223,23 @@ export default function LectAssignments({
     }
   };
 
+  //Function that handles the assignment edits.
   const onSubmit = async (values: z.infer<typeof assignmentFormSchema>) => {
     try {
-      // Here you would implement your updateAssignment function
-      // await updateAssignment(client, selectedAssignment._id, values);
+      if (!selectedAssignment) return;
+
+      setIsLoading(true);
+
+      await updateAssignmentWithResources(
+        client,
+        selectedAssignment._id,
+        values
+      );
+
       toast("Success", {
         description: "Assignment updated successfully",
       });
+
       fetchAssignments();
       setIsEditing(false);
     } catch (error) {
@@ -189,32 +247,43 @@ export default function LectAssignments({
       toast("Error", {
         description: "Failed to update assignment",
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  // Helper function to calculate the "dueIn" value
+  // Helper function to calculate the "dueIn" value with time consideration
   const calculateDueIn = (dueDate: string): string => {
+    if (!dueDate) return "No deadline set";
     const due = new Date(dueDate);
     const now = new Date();
     const diffInMs = due.getTime() - now.getTime();
-    const diffInDays = Math.ceil(diffInMs / (1000 * 60 * 60 * 24));
+
+    if (diffInMs <= 0) return "Overdue";
+
+    const diffInMinutes = Math.floor(diffInMs / (1000 * 60));
+    const diffInHours = Math.floor(diffInMinutes / 60);
+    const diffInDays = Math.floor(diffInHours / 24);
 
     if (diffInDays > 0) {
-      return `${diffInDays} day${diffInDays > 1 ? "s" : ""} left`;
-    } else if (diffInDays === 0) {
-      return "Due today";
-    } else {
-      return "Overdue";
+      return `${diffInDays} day${diffInDays > 1 ? "s" : ""} ${diffInHours % 24} hour${diffInHours % 24 !== 1 ? "s" : ""} left`;
     }
+    if (diffInHours > 0) {
+      return `${diffInHours} hour${diffInHours !== 1 ? "s" : ""} ${diffInMinutes % 60} minute${diffInMinutes % 60 !== 1 ? "s" : ""} left`;
+    }
+    return `${diffInMinutes} minute${diffInMinutes !== 1 ? "s" : ""} left`;
   };
 
-  // Helper function to format the due date
+  // Helper function to format the due datetime
   const formatDueDate = (dueDate: string): string => {
+    if (!dueDate) return "No deadline set";
     const date = new Date(dueDate);
     return new Intl.DateTimeFormat("en-US", {
       month: "long",
       day: "numeric",
       year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     }).format(date);
   };
 
@@ -256,8 +325,22 @@ export default function LectAssignments({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-
-      {selectedAssignment ? (
+      {isCreating ? (
+        // Render Create Assignment Form
+        <CreateAssignment
+          departments={
+            departments.filter(
+              (department) => department.name !== undefined
+            ) as { _id: string; name: string }[]
+          }
+          lecturerId={lecturerId}
+          onCancel={() => setIsCreating(false)} // Go back to the assignments list
+          onAssignmentCreated={() => {
+            setIsCreating(false); // Close the form
+            fetchAssignments(); // Refresh the assignments list
+          }}
+        />
+      ) : selectedAssignment ? (
         <div>
           <div className="flex justify-between items-center mx-auto gap-6 bg-transparent px-4">
             <div className="text-sm dark:text-white">
@@ -335,21 +418,35 @@ export default function LectAssignments({
                         <FormField
                           control={form.control}
                           name="dueDate"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel className="text-lg font-medium mb-1">
-                                Set Deadline
-                              </FormLabel>
-                              <FormControl>
-                                <Input
-                                  className="py-6"
-                                  type="date"
-                                  {...field}
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
+                          render={({ field }) => {
+                            // Convert the field value to proper input format
+                            const inputValue = field.value
+                              ? sanityToInputDatetime(field.value)
+                              : "";
+
+                            return (
+                              <FormItem>
+                                <FormLabel className="text-lg font-medium mb-1">
+                                  Set Deadline
+                                </FormLabel>
+                                <FormControl>
+                                  <Input
+                                    className="py-6"
+                                    type="datetime-local"
+                                    value={inputValue}
+                                    onChange={(e) => {
+                                      // Convert back to Sanity format when saving
+                                      const sanityValue = inputToSanityDatetime(
+                                        e.target.value
+                                      );
+                                      field.onChange(sanityValue);
+                                    }}
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            );
+                          }}
                         />
                         <FormField
                           control={form.control}
@@ -375,7 +472,24 @@ export default function LectAssignments({
                                 Department
                               </FormLabel>
                               <FormControl>
-                                <Input className="py-6" {...field} />
+                                <Select
+                                  value={field.value}
+                                  onValueChange={field.onChange}
+                                >
+                                  <SelectTrigger className="w-full enabled:hover:border-blue-600 disabled:opacity-75">
+                                    <SelectValue placeholder="Select your department" />
+                                  </SelectTrigger>
+                                  <SelectContent className="bg-bg1">
+                                    {departments.map((department) => (
+                                      <SelectItem
+                                        key={department._id}
+                                        value={department.name || ""}
+                                      >
+                                        {department.name}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
                               </FormControl>
                               <FormMessage />
                             </FormItem>
@@ -423,25 +537,39 @@ export default function LectAssignments({
                                     <Image
                                       src={field.value}
                                       alt="Assignment preview"
-                                      fill
-                                      className="object-cover"
+                                      className="h-full w-full object-cover"
+                                      width={344}
+                                      height={194}
                                     />
                                   </div>
                                 )}
                                 <FormControl>
                                   <div className="flex-1">
-                                    {/* <Input
-                                    placeholder="Paste image URL or upload file"
-                                    {...field}
-                                    className="py-6"
-                                  /> */}
                                     <Input
                                       type="file"
                                       accept="image/*"
                                       className="cursor-pointer"
-                                      onChange={(e) => {
-                                        // Add your file upload logic here
-                                        // After upload, set the URL with field.onChange(newUrl)
+                                      onChange={async (e) => {
+                                        const file = e.target.files?.[0];
+                                        if (file) {
+                                          try {
+                                            const result =
+                                              await uploadFileToSanity(
+                                                client,
+                                                file
+                                              );
+                                            field.onChange(result.url);
+                                          } catch (error) {
+                                            console.error(
+                                              "Error uploading image:",
+                                              error
+                                            );
+                                            toast("Error", {
+                                              description:
+                                                "Failed to upload image",
+                                            });
+                                          }
+                                        }
                                       }}
                                     />
                                   </div>
@@ -501,7 +629,8 @@ export default function LectAssignments({
                                               <span className="text-sm w-full text-muted-foreground">
                                                 {field.value.name}
                                               </span>
-                                            ) : resource.file ? (
+                                            ) : typeof resource.file ===
+                                              "string" ? (
                                               <a
                                                 href={resource.file}
                                                 target="_blank"
@@ -570,9 +699,14 @@ export default function LectAssignments({
                     </div>
                     <Button
                       type="submit"
-                      className="mt-4 py-6 bg-blue-700 hover:bg-blue-600 text-white cursor-pointer font-medium"
+                      className="mt-4 py-6 bg-blue-700 hover:bg-blue-600 text-white cursor-pointer font-medium flex items-center justify-center"
+                      disabled={isLoading}
                     >
-                      Save Changes
+                      {isLoading ? (
+                        <Loader2 className="animate-spin h-5 w-5" />
+                      ) : (
+                        "Save Changes"
+                      )}
                     </Button>
                   </div>
                 </div>
@@ -687,10 +821,10 @@ export default function LectAssignments({
               Assignments
             </h1>
             <Button
-              onClick={() => setActiveTab("Grades & Feedback")}
+              onClick={() => setIsCreating(true)}
               className="bg-blue-500 hover:bg-blue-400 text-white font-medium cursor-pointer px-4 py-2 rounded-sm"
             >
-              Create New Assignment
+              + Create New Assignment
             </Button>
           </div>
           <div className="flex w-full justify-center items-center mx-auto p-3">

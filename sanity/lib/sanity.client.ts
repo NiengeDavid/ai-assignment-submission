@@ -73,6 +73,82 @@ export async function getUserById(
 export async function deleteAssignment(client: SanityClient, id: string) {
   return client.delete(id);
 }
+
+export async function uploadFileToSanity(
+  client: SanityClient,
+  file: File
+): Promise<{ url: string; originalFilename: string; size: number }> {
+  try {
+    // Check if the file exists
+    if (!file) {
+      throw new Error("No file provided");
+    }
+
+    // Upload the file to Sanity
+    const result = await client.assets.upload("file", file, {
+      filename: file.name,
+      contentType: file.type,
+    });
+
+    return {
+      url: result.url,
+      originalFilename: result.originalFilename || file.name,
+      size: result.size,
+    };
+  } catch (error) {
+    console.error("Error uploading file to Sanity:", error);
+    throw error;
+  }
+}
+
+export async function updateAssignmentWithResources(
+  client: SanityClient,
+  assignmentId: string,
+  values: any
+) {
+  try {
+    // Process resources - upload new files if needed
+    const resources = await Promise.all(
+      (values.resources || []).map(async (resource: any) => {
+        // If resource.file is already a URL (existing file), keep it
+        if (typeof resource.file === "string") {
+          return {
+            fileName: resource.name || resource.file.split("/").pop(),
+            fileUrl: resource.file,
+            fileSize: 0, // We don't have size for existing files
+          };
+        }
+
+        // If resource.file is a File object, upload it
+        if (resource.file instanceof File) {
+          const uploadedFile = await uploadFileToSanity(client, resource.file);
+          return {
+            fileName: resource.name || uploadedFile.originalFilename,
+            fileUrl: uploadedFile.url,
+            fileSize: uploadedFile.size,
+          };
+        }
+
+        return null;
+      })
+    );
+
+    // Filter out any null resources
+    const filteredResources = resources.filter(Boolean);
+
+    // Prepare the assignment data for update
+    const assignmentData = {
+      ...values,
+      resources: filteredResources,
+    };
+
+    // Update the assignment in Sanity
+    return await client.patch(assignmentId).set(assignmentData).commit();
+  } catch (error) {
+    console.error("Error updating assignment:", error);
+    throw error;
+  }
+}
 //   export async function getSettings(client: SanityClient): Promise<Settings> {
 //     return (await client.fetch(settingsQuery)) || {}
 //   }

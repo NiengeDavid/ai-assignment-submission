@@ -40,7 +40,7 @@ export function AssignmentCards({ data, onViewDetails }: AssignmentCardsProps) {
     <div className="grid grid-cols-1 gap-6 mx-auto lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
       {data.map((assignment) => (
         <div
-          key={assignment._id}
+          key={assignment?._id}
           className="bg-white dark:bg-bg2 shadow-md rounded-lg overflow-hidden max-w-sm mx-auto"
         >
           {/* Assignment Image */}
@@ -48,10 +48,9 @@ export function AssignmentCards({ data, onViewDetails }: AssignmentCardsProps) {
             <Image
               src={assignment?.image || bgimage}
               alt={assignment.title}
-              className="h-full w-full"
+              className="h-full w-full bg-cover"
               width={344}
               height={194}
-              objectFit="cover"
             />
           </div>
 
