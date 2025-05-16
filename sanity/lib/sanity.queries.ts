@@ -113,6 +113,47 @@ export const submittedAssignmentsQuery = groq`
   }
 `;
 
+export const lecturerSubmittedAssignmentsQuery = groq`
+  *[_type == "studentSubmission" && assignment->lecturer._ref == $lecturerId] {
+    _id,
+    "assignmentId": assignment->_id,
+    "assignmentTitle": assignment->title,
+    "studentId": student->academic.regNumber, // Fixed path for studentId
+    "studentName": student->fullName,
+    "course": assignment->course,
+    "department": assignment->department->name,
+    "level": assignment->level,
+    "status": coalesce(status, "pending"), // Default status to "pending" if not set
+    gradedAt,
+    "submittedAt": _createdAt,
+    "assignmentDetails": assignment->{
+      _id,
+      title,
+      assignmentId,
+      course,
+      "image": image.asset->url,
+      "lecturer": lecturer->{
+        _id,
+        fullName,
+        "avatar": image.asset->url
+      },
+      "department": department->{
+        _id,
+        name
+      },
+      level,
+      dueDate,
+      question,
+      resources[]{
+        displayName,
+        "fileUrl": file.asset->url,
+        "fileName": file.asset->originalFilename,
+        "fileSize": file.asset->size
+      }
+    }
+  }
+`;
+
 export const lecturerAssignmentsQuery = groq`
   *[_type == "assignment" && lecturer._ref == $lecturerId] {
     _id,
@@ -289,4 +330,43 @@ export interface StudentDetails {
 export interface SubmittedAssignments {
   assignmentId: string; // The ID of the submitted assignment
   status: string; // Status of the submission (e.g., "graded", "pending")
+}
+
+export interface LecturerSubmittedAssignment {
+  _id: string; // The ID of the submission
+  assignmentId: string; // The ID of the associated assignment
+  assignmentTitle: string; // The title of the associated assignment
+  studentId: string; // The ID of the student who submitted the assignment
+  studentName: string; // The full name of the student
+  course: string; // The course associated with the assignment
+  department: string; // The department associated with the assignment
+  level: string; // The academic level of the assignment
+  status: string; // The status of the submission (e.g., "graded", "pending")
+  gradedAt?: string; // The date and time the submission was graded
+  submittedAt: string; // The date and time the submission was created
+  assignmentDetails: {
+    _id: string;
+    title: string;
+    assignmentId: string;
+    course: string;
+    image?: string; // URL of the assignment cover image
+    lecturer?: {
+      _id: string;
+      fullName: string;
+      avatar?: string; // URL of the lecturer's avatar
+    };
+    department?: {
+      _id: string;
+      name: string;
+    };
+    level: string; // e.g., "100", "200", "300", "400"
+    dueDate: string; // ISO date string
+    question: string; // Assignment question or description
+    resources: {
+      displayName: string;
+      fileUrl: string; // URL of the file
+      fileName: string; // Original filename of the file
+      fileSize?: number;
+    }[];
+  };
 }

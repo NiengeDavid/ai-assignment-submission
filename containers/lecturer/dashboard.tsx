@@ -10,6 +10,7 @@ import Grades from "@/containers/student/grades";
 import { type Assignment } from "@/sanity/lib/sanity.queries";
 import LectDash from "./dash";
 import LectAssignments from "./assignments";
+import GradingTab from "./lectGrades";
 
 export default function LecturerDashboardPage() {
   // State to track the active tab
@@ -61,7 +62,7 @@ export default function LecturerDashboardPage() {
               {activeTab === "Grades & Feedback" && (
                 <div className="px-4 lg:px-6">
                   {/* Add your grades content here */}
-                  <Grades />
+                  <GradingTab />
                 </div>
               )}
               {activeTab === "Notifications" && (

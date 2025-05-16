@@ -28,6 +28,8 @@ import {
   studentDetailsQuery,
   SubmittedAssignments,
   lecturerAssignmentsQuery,
+  LecturerSubmittedAssignment,
+  lecturerSubmittedAssignmentsQuery,
 } from "@/sanity/lib/sanity.queries";
 import { createClient, type SanityClient } from "next-sanity";
 
@@ -168,6 +170,13 @@ export const getSubmittedAssignments = async (
     assignmentId: submission.assignmentId,
     status: submission.status,
   }));
+};
+
+export const getLecturerSubmittedAssignments = async (
+  client: SanityClient,
+  lecturerId: string
+): Promise<LecturerSubmittedAssignment[]> => {
+  return await client.fetch(lecturerSubmittedAssignmentsQuery, { lecturerId });
 };
 
 export const getFilteredAssignments = async (
