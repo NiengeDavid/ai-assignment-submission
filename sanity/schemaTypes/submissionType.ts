@@ -49,8 +49,64 @@ export const submissionType = defineType({
       description:
         "Optional comments from the student regarding their submission.",
     }),
-    // You could add a 'status' field here if submissions go through a workflow
-    // e.g., 'Submitted', 'Late Submission', 'Resubmitted'
+    defineField({
+      name: "checkerData",
+      title: "Checker Data",
+      type: "array",
+      of: [
+        defineField({
+          name: "checkerResult",
+          title: "Checker Result",
+          type: "object",
+          fields: [
+            defineField({
+              name: "title",
+              title: "Title",
+              type: "string",
+              validation: (Rule) => Rule.required(),
+            }),
+            defineField({
+              name: "amount",
+              title: "Amount",
+              type: "number",
+              validation: (Rule) => Rule.required().min(0),
+            }),
+            defineField({
+              name: "fill",
+              title: "Fill Color",
+              type: "string",
+              description: "CSS variable or color code for chart rendering.",
+              validation: (Rule) => Rule.required(),
+            }),
+          ],
+        }),
+      ],
+      description: "Results from AI and plagiarism checkers.",
+      validation: (Rule) => Rule.required().min(1), // Ensure at least one checker result is present
+    }),
+
+    defineField({
+      name: "status",
+      title: "Status",
+      type: "string",
+      options: {
+        list: [
+          { title: "Submitted", value: "submitted" },
+          { title: "Graded", value: "graded" },
+          { title: "Not Graded", value: "not_graded" },
+        ],
+        layout: "radio", // Display as radio buttons
+      },
+      initialValue: "submitted", // Default to 'Submitted'
+      validation: (Rule: any) => Rule.required(),
+    }),
+    {
+      name: "grading",
+      title: "Grading",
+      type: "reference",
+      to: [{ type: "grading" }],
+      description: "The grading details for this submission.",
+    },
   ],
   preview: {
     select: {

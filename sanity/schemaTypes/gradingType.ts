@@ -3,7 +3,7 @@ import { defineField, defineType } from "sanity";
 import { CheckmarkCircleIcon } from "@sanity/icons";
 
 export const gradingType = defineType({
-  name: "gradingInfo",
+  name: "grading",
   title: "Grading & Feedback",
   type: "document",
   icon: CheckmarkCircleIcon,
@@ -13,6 +13,7 @@ export const gradingType = defineType({
       title: "Student Submission",
       type: "reference",
       to: [{ type: "studentSubmission" }],
+      description: "The student submission being graded.",
       validation: (Rule) => Rule.required(),
       options: {
         disableNew: true,
@@ -33,15 +34,16 @@ export const gradingType = defineType({
       // })
     }),
     defineField({
-      name: "grader",
-      title: "Grader",
+      name: "lecturer",
+      title: "Lecturer",
       type: "reference",
       to: [{ type: "user" }],
       options: {
         filter: 'role == "lecturer"',
       },
+      description: "The lecturer grading the submission.",
       validation: (Rule) => Rule.required(),
-      readOnly: true, // Typically set to the lecturer doing the grading
+      //readOnly: true, // Typically set to the lecturer doing the grading
     }),
     defineField({
       name: "score",
@@ -51,61 +53,47 @@ export const gradingType = defineType({
       // Max score could potentially be fetched from the linked assignment.
     }),
     defineField({
+      name: "maxscore",
+      title: "Maximun Score Possible",
+      type: "number",
+      // validation: Rule => Rule.required().min(0).max(ASSIGNMENT_TOTAL_MARKS)
+      // Max score could potentially be fetched from the linked assignment.
+    }),
+    defineField({
       name: "feedback",
       title: "Feedback",
       type: "text", // Or 'blockContent' for rich text
-      validation: (Rule) => Rule.required(),
+      description: "Feedback provided by the lecturer.",
+      //validation: (Rule) => Rule.required(),
     }),
     defineField({
-      name: "aiPlagiarismCheck",
-      title: "AI & Plagiarism Check",
-      type: "object",
-      fields: [
-        {
-          name: "aiScore",
-          title: "AI Content Score (%)",
-          type: "number",
-          validation: (Rule) => Rule.min(0).max(100),
-        },
-        {
-          name: "plagiarismScore",
-          title: "Plagiarism Score (%)",
-          type: "number",
-          validation: (Rule) => Rule.min(0).max(100),
-        },
-        { name: "reportUrl", title: "Full Report URL", type: "url" },
-        { name: "checkDetails", title: "Check Details / Notes", type: "text" },
-      ],
-      options: { collapsible: true, collapsed: false },
-    }),
-    defineField({
-      name: "gradedDate",
+      name: "gradedAt",
       title: "Graded Date",
       type: "datetime",
       readOnly: true,
       initialValue: () => new Date().toISOString(),
     }),
-    defineField({
-      name: "gradeStatus",
-      title: "Grade Status",
-      type: "string",
-      options: {
-        list: [
-          { title: "Successfully Graded", value: "graded-successful" },
-          { title: "Needs Revision", value: "needs-revision" },
-          // ... other statuses
-        ],
-      },
-      initialValue: "graded-successful",
-      validation: (Rule) => Rule.required(),
-    }),
+    // defineField({
+    //   name: "gradeStatus",
+    //   title: "Grade Status",
+    //   type: "string",
+    //   options: {
+    //     list: [
+    //       { title: "Successfully Graded", value: "graded-successful" },
+    //       { title: "Needs Revision", value: "needs-revision" },
+    //       // ... other statuses
+    //     ],
+    //   },
+    //   initialValue: "graded-successful",
+    //   validation: (Rule) => Rule.required(),
+    // }),
   ],
   preview: {
     select: {
       submissionStudentName: "submission.student.name",
       submissionAssignmentTitle: "submission.assignment.title",
       score: "score",
-      graderName: "grader.name",
+      lecturer: "lecturer.name",
       status: "gradeStatus",
     },
     prepare(selection) {
@@ -113,12 +101,12 @@ export const gradingType = defineType({
         submissionStudentName,
         submissionAssignmentTitle,
         score,
-        graderName,
+        lecturer,
         status,
       } = selection;
       return {
         title: `Grade for: ${submissionStudentName || "N/A"} - ${submissionAssignmentTitle || "N/A"}`,
-        subtitle: `Score: ${score !== undefined ? score : "N/A"} by ${graderName || "Grader N/A"} (${status || ""})`,
+        subtitle: `Score: ${score !== undefined ? score : "N/A"} by ${lecturer || "Grader N/A"} (${status || ""})`,
       };
     },
   },

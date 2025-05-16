@@ -6,8 +6,17 @@ import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import { FaFileAlt, FaDownload } from "react-icons/fa";
 import { readToken } from "@/sanity/lib/sanity.api";
-import { getClient, getAllAssignment } from "@/sanity/lib/sanity.client";
-import { type Assignment } from "@/sanity/lib/sanity.queries";
+import {
+  getClient,
+  getAllAssignment,
+  getSubmittedAssignments,
+  getStudentDetails,
+  getFilteredAssignments,
+} from "@/sanity/lib/sanity.client";
+import { StudentDetails, SubmittedAssignments, type Assignment } from "@/sanity/lib/sanity.queries";
+import StudentSubmission from "./studentSubmission";
+import { useUser } from "@clerk/nextjs";
+import { toast } from "sonner";
 
 const avatar = "/assets/avatars/lecturer1.png";
 interface AssignmentsProps {
@@ -25,25 +34,86 @@ export default function Assignments({
 }: AssignmentsProps) {
   const client = getClient({ token: readToken });
   const [assignments, setAssignments] = useState<Assignment[]>([]);
+  const [studentDetails, setStudentDetails] = useState<StudentDetails | null>(
+    null
+  ); // Track user details
+  const [submittedAssignments, setSubmittedAssignments] = useState<
+    SubmittedAssignments[]
+  >([]); // Track submitted assignments
   const [isLoading, setIsLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false); // State for submission mode
+  const { user } = useUser();
 
+  const userId = user?.id || "default-user-id"; // Replace with actual user ID
+  const currentUserId = `user-${userId}`; // Example format for current user ID
+
+  useEffect(() => {
+    const fetchUserDetails = async () => {
+      setIsLoading(true);
+      try {
+        const userData = await getStudentDetails(client, userId);
+        setStudentDetails(userData);
+        // console.log("User Data:", studentDetails);
+      } catch (error) {
+        toast("Error", {
+          description: "Error fetching user data",
+        });
+        // console.error("Error fetching user data:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchUserDetails();
+  }, [currentUserId]);
+
+  // Fetch assignments and submitted assignments
   useEffect(() => {
     const fetchData = async () => {
       setIsLoading(true); // Start loading
       try {
-        const assignmentsData = await getAllAssignment(client);
-        setAssignments(assignmentsData);
+        // Fetch assignments filtered by department and level
+        if (studentDetails) {
+          const [assignmentsData, submittedAssignmentsData] = await Promise.all(
+            [
+              getFilteredAssignments(
+                client,
+                studentDetails.department._id, // Use the correct property
+                studentDetails.level // Use the correct property
+              ),
+              getSubmittedAssignments(client, currentUserId),
+            ]
+          );
+
+          setAssignments(assignmentsData);
+          setSubmittedAssignments(submittedAssignmentsData);
+          console.log("Assignments Data:", assignmentsData);
+        } else {
+          console.warn("Student details are not available.");
+        }
       } catch (error) {
-        console.error("Error fetching galleries:", error);
+        console.error("Error fetching assignments Data:", error);
       } finally {
         setIsLoading(false); // End loading
       }
     };
 
     fetchData();
-    // console.log("Departments:", departments);
-    // console.log("Faculties:", faculties);
-  }, []);
+  }, [currentUserId, studentDetails]);
+
+  // Filter assignments to exclude submitted ones
+  const filteredAssignments = assignments.filter(
+    (assignment) => !submittedAssignments.some((submission) => submission.assignmentId === assignment._id)
+  );
+
+  const handleSubmissionSuccess = (assignmentId: string) => {
+    setSubmittedAssignments((prev) => [
+      ...prev,
+      { assignmentId, status: "submitted" }, // Add a new SubmittedAssignments object
+    ]);
+    setIsSubmitting(false); // Exit submission mode
+    setSelectedAssignment(null); // Reset the selected assignment
+  };
 
   // Helper function to calculate the "dueIn" value
   const calculateDueIn = (dueDate: string): string => {
@@ -79,6 +149,21 @@ export default function Assignments({
     return `${(sizeInBytes / (1024 * 1024)).toFixed(2)} MB`;
   };
 
+  if (isSubmitting && selectedAssignment) {
+    // Render the StudentSubmission component when isSubmitting is true
+    return (
+      <StudentSubmission
+        assignmentId={selectedAssignment._id} // Pass the selected assignment ID
+        assignmentTitle={selectedAssignment.title} // Pass the selected assignment title
+        studentId={currentUserId} // Pass the current user ID
+        onSubmissionSuccess={() =>
+          handleSubmissionSuccess(selectedAssignment._id)
+        } // Handle successful submission
+        onCancel={() => setIsSubmitting(false)} // Exit submission mode on cancel
+      />
+    );
+  }
+
   return (
     <div className="bg-transparent w-full py-6 mx-auto space-y-6">
       {selectedAssignment ? (
@@ -98,7 +183,10 @@ export default function Assignments({
                 {selectedAssignment.title}
               </span>
             </div>
-            <Button className="bg-blue-500 hover:bg-blue-400 text-white font-medium px-4 py-2 cursor-pointer">
+            <Button
+              onClick={() => setIsSubmitting(true)} // Set isSubmitting to true
+              className="bg-blue-500 hover:bg-blue-400 text-white font-medium px-4 py-2 cursor-pointer"
+            >
               Submit
             </Button>
           </div>
@@ -217,7 +305,7 @@ export default function Assignments({
           </div>
           <div className="flex w-full justify-center items-center mx-auto p-3">
             <AssignmentCards
-              data={assignments}
+              data={filteredAssignments}
               onViewDetails={(assignment) => setSelectedAssignment(assignment)}
             />
           </div>

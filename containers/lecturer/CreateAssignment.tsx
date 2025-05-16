@@ -99,8 +99,10 @@ export default function CreateAssignment({
           );
           return {
             displayName: resource.name,
+            _key: uploadResult._rev,
             file: {
               _type: "file",
+
               asset: {
                 _type: "reference",
                 _ref: uploadResult._id, // Use the document ID

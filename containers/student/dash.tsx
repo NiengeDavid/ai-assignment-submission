@@ -3,8 +3,21 @@ import { useState, useEffect } from "react";
 import { SectionCards } from "@/components/section-cards";
 import { AssignmentCards } from "@/components/assignment-cards";
 import { readToken } from "@/sanity/lib/sanity.api";
-import { getClient, getAllAssignment } from "@/sanity/lib/sanity.client";
-import { type Assignment } from "@/sanity/lib/sanity.queries";
+import {
+  getClient,
+  getAllAssignment,
+  getSubmittedAssignments,
+  getStudentDetails,
+  getFilteredAssignments,
+} from "@/sanity/lib/sanity.client";
+import {
+  StudentDetails,
+  SubmittedAssignments,
+  type Assignment,
+} from "@/sanity/lib/sanity.queries";
+import StudentSubmission from "./studentSubmission";
+import { useUser } from "@clerk/nextjs";
+import { toast } from "sonner";
 
 interface DashProps {
   setActiveTab: (tab: string) => void;
@@ -19,25 +32,87 @@ export default function Dash({
 }: DashProps) {
   const client = getClient({ token: readToken });
   const [assignments, setAssignments] = useState<Assignment[]>([]);
+  const [studentDetails, setStudentDetails] = useState<StudentDetails | null>(
+    null
+  ); // Track user details
+  const [submittedAssignments, setSubmittedAssignments] = useState<
+    SubmittedAssignments[]
+  >([]);
   const [isLoading, setIsLoading] = useState(true);
+  const { user } = useUser();
 
+  const userId = user?.id || "default-user-id"; // Replace with actual user ID
+  const currentUserId = `user-${userId}`; // Example format for current user ID
+
+  useEffect(() => {
+    const fetchUserDetails = async () => {
+      setIsLoading(true);
+      try {
+        const userData = await getStudentDetails(client, userId);
+        setStudentDetails(userData);
+        // console.log("User Data:", studentDetails);
+      } catch (error) {
+        toast("Error", {
+          description: "Error fetching user data",
+        });
+        // console.error("Error fetching user data:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchUserDetails();
+  }, [currentUserId]);
+
+  // Fetch assignments and submitted assignments
   useEffect(() => {
     const fetchData = async () => {
       setIsLoading(true); // Start loading
       try {
-        const assignmentsData = await getAllAssignment(client);
-        setAssignments(assignmentsData);
+        // Fetch assignments filtered by department and level
+        if (studentDetails) {
+          const [assignmentsData, submittedAssignmentsData] = await Promise.all(
+            [
+              getFilteredAssignments(
+                client,
+                studentDetails.department._id, // Use the correct property
+                studentDetails.level // Use the correct property
+              ),
+              getSubmittedAssignments(client, currentUserId),
+            ]
+          );
+
+          setAssignments(assignmentsData);
+          setSubmittedAssignments(submittedAssignmentsData);
+          //console.log("Assignments Data:", assignmentsData);
+        } else {
+          console.warn("Student details are not available.");
+        }
       } catch (error) {
-        console.error("Error fetching Assignments:", error);
+        console.error("Error fetching assignments Data:", error);
       } finally {
         setIsLoading(false); // End loading
       }
     };
 
     fetchData();
-    // console.log("Departments:", departments);
-    // console.log("Faculties:", faculties);
-  }, []);
+  }, [currentUserId, studentDetails, studentDetails]);
+
+  // Filter assignments to exclude submitted ones
+  const filteredAssignments = assignments.filter(
+    (assignment) =>
+      !submittedAssignments.some(
+        (submission) => submission.assignmentId === assignment._id
+      )
+  );
+
+  // Calculate dynamic card data
+  const totalAssignments = assignments.length;
+  const upcomingAssignments = filteredAssignments.length;
+  // Calculate graded assignments
+  const gradedAssignments = submittedAssignments.filter(
+    (submission) => submission.status === "graded"
+  ).length;
 
   const cardData: {
     title: string;
@@ -50,7 +125,7 @@ export default function Dash({
     {
       title: "Total Assignments",
       description: "Total Assignments",
-      value: "10",
+      value: totalAssignments.toString(),
       trendValue: "",
       footerText: "",
       footerDescription: "",
@@ -58,7 +133,7 @@ export default function Dash({
     {
       title: "Upcoming Assignments",
       description: "Upcoming Assignments",
-      value: "7",
+      value: upcomingAssignments.toString(),
       trendValue: "",
       footerText: "",
       footerDescription: "",
@@ -66,7 +141,7 @@ export default function Dash({
     {
       title: "Graded Assignments",
       description: "Graded Assignments",
-      value: "3",
+      value: gradedAssignments.toString(),
       trendValue: "",
       footerText: "",
       footerDescription: "",
@@ -99,7 +174,7 @@ export default function Dash({
           </div>
           <div className="flex w-full justify-center items-center mx-auto p-3">
             <AssignmentCards
-              data={assignments}
+              data={filteredAssignments}
               onViewDetails={(assignment) => {
                 setSelectedAssignment(assignment); // Set the selected assignment
                 setActiveTab("Assignments"); // Switch to the Assignments tab

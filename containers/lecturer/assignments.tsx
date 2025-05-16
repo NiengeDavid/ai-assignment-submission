@@ -13,6 +13,7 @@ import {
   updateAssignmentWithResources,
   uploadFileToSanity,
   getAllDepartments,
+  getLecturerAssignments,
 } from "@/sanity/lib/sanity.client";
 import { Department, type Assignment } from "@/sanity/lib/sanity.queries";
 import { toast } from "sonner";
@@ -100,7 +101,7 @@ export default function LectAssignments({
 
   const currenctUserId = user?.id || ""; // Get the current user's ID
   const lecturerId = `user-${currenctUserId}`;
-  console.log("Lecturer ID:", lecturerId);
+  //console.log("Lecturer ID:", lecturerId);
 
   // Initialize form
   const form = useForm<z.infer<typeof assignmentFormSchema>>({
@@ -146,13 +147,14 @@ export default function LectAssignments({
     setIsLoading(true);
     try {
       const [assignmentsData, departmentsData] = await Promise.all([
-        getAllAssignment(client),
+        getLecturerAssignments(client, lecturerId), // Fetch only the lecturer's assignments
         getAllDepartments(client),
       ]);
       setDepartments(departmentsData);
       setAssignments(assignmentsData);
+      // console.log(assignmentsData)
     } catch (error) {
-      console.error("Error fetching assignments:", error);
+      // console.error("Error fetching assignments:", error);
       toast("Error", {
         description: "Failed to fetch assignments",
       });

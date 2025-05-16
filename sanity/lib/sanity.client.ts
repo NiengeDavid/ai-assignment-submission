@@ -21,6 +21,13 @@ import {
   type Faculty,
   type User,
   userbyIdQuery,
+  SubmittedAssignment,
+  submittedAssignmentsQuery,
+  filteredAssignmentsQuery,
+  type StudentDetails,
+  studentDetailsQuery,
+  SubmittedAssignments,
+  lecturerAssignmentsQuery,
 } from "@/sanity/lib/sanity.queries";
 import { createClient, type SanityClient } from "next-sanity";
 
@@ -129,7 +136,7 @@ export async function updateAssignmentWithResources(
           };
         }
 
-        return null;
+        return [];
       })
     );
 
@@ -149,6 +156,52 @@ export async function updateAssignmentWithResources(
     throw error;
   }
 }
+
+export const getSubmittedAssignments = async (
+  client: SanityClient,
+  studentId: string
+): Promise<SubmittedAssignments[]> => {
+  const submittedAssignments = await client.fetch(submittedAssignmentsQuery, {
+    studentId,
+  });
+  return submittedAssignments.map((submission: SubmittedAssignments) => ({
+    assignmentId: submission.assignmentId,
+    status: submission.status,
+  }));
+};
+
+export const getFilteredAssignments = async (
+  client: SanityClient,
+  departmentId: string,
+  level: string
+): Promise<Assignment[]> => {
+  return await client.fetch(filteredAssignmentsQuery, {
+    departmentId,
+    level,
+  });
+};
+
+export async function getStudentDetails(
+  client: SanityClient,
+  userId: string
+): Promise<StudentDetails | null> {
+  try {
+    const student = await client.fetch<StudentDetails>(studentDetailsQuery, {
+      userId,
+    });
+    return student || null;
+  } catch (error) {
+    console.error("Error fetching student details:", error);
+    return null;
+  }
+}
+
+export const getLecturerAssignments = async (
+  client: SanityClient,
+  lecturerId: string
+): Promise<Assignment[]> => {
+  return await client.fetch(lecturerAssignmentsQuery, { lecturerId });
+};
 //   export async function getSettings(client: SanityClient): Promise<Settings> {
 //     return (await client.fetch(settingsQuery)) || {}
 //   }

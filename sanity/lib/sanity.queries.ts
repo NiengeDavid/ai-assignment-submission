@@ -46,10 +46,99 @@ export const assignmentQuery = groq`*[_type == "assignment"]{
   }
 }`;
 
+export const filteredAssignmentsQuery = groq`
+  *[_type == "assignment" && department._ref == $departmentId && level == $level] {
+    _id,
+    _createdAt,
+    title,
+    assignmentId,
+    course,
+    "image": image.asset->url,
+    "lecturer": lecturer->{
+      _id,
+      fullName,
+      "avatar": image.asset->url
+    },
+    "department": department->{
+      _id,
+      name
+    },
+    level,
+    dueDate,
+    question,
+    resources[]{
+      displayName,
+      "fileUrl": file.asset->url,
+      "fileName": file.asset->originalFilename,
+      "fileSize": file.asset->size
+    }
+  }
+`;
+
+// Query to fetch student details (department and level)
+export const studentDetailsQuery = groq`
+  *[_type == "user" && userId == $userId && role == "student"][0] {
+    _id,
+    userId,
+    fullName,
+    "email": contact.email,
+    role,
+    "image": image.asset->url,
+    "department": academic.department->{
+      _id,
+      name
+    },
+    "faculty": academic.faculty->{
+      _id,
+      name
+    },
+    "level": academic.level,
+    "regNumber": academic.regNumber,
+    createdAt,
+    updatedAt
+  }
+`;
+
 export const userbyIdQuery = groq`
   *[_type == "user" && userId == $userId][0]{
     userId,
     role,
+  }
+`;
+
+export const submittedAssignmentsQuery = groq`
+  *[_type == "studentSubmission" && student._ref == $studentId] {
+   "assignmentId": assignment->_id,
+   status
+  }
+`;
+
+export const lecturerAssignmentsQuery = groq`
+  *[_type == "assignment" && lecturer._ref == $lecturerId] {
+    _id,
+    _createdAt,
+    title,
+    assignmentId,
+    course,
+    "image": image.asset->url,
+    "lecturer": lecturer->{
+      _id,
+      fullName,
+      "avatar": image.asset->url
+    },
+    "department": department->{
+      _id,
+      name
+    },
+    level,
+    dueDate,
+    question,
+    resources[]{
+      displayName,
+      "fileUrl": file.asset->url,
+      "fileName": file.asset->originalFilename,
+      "fileSize": file.asset->size
+    }
   }
 `;
 
@@ -148,4 +237,56 @@ export interface Assignment {
 export interface User {
   _id: string;
   role: string;
+}
+
+export interface SubmittedAssignment {
+  assignment: string; // The ID of the submitted assignment
+}
+
+// Type for the student details query result
+export interface SanityReference {
+  _ref: string;
+  _type: "reference";
+}
+
+export interface SanityImageAsset {
+  _id: string;
+  url: string;
+  // Add other asset fields if needed
+}
+
+// export interface Department {
+//   _id: string;
+//   name: string;
+// }
+
+// export interface Faculty {
+//   _id: string;
+//   name: string;
+// }
+
+export interface StudentDetails {
+  _id: string;
+  userId: string;
+  fullName: string;
+  email: string;
+  role: string;
+  image?: string;
+  department: {
+    _id: string;
+    name: string;
+  };
+  faculty: {
+    _id: string;
+    name: string;
+  };
+  level: string;
+  regNumber: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface SubmittedAssignments {
+  assignmentId: string; // The ID of the submitted assignment
+  status: string; // Status of the submission (e.g., "graded", "pending")
 }
