@@ -2,8 +2,35 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { PieChart } from "recharts";
+import { Pie, PieChart, Label } from "recharts";
 import { useUser } from "@clerk/nextjs";
+
+// Add the following interfaces at the top of the file
+interface Submission {
+  grade?: number;
+  feedback?: string;
+  assignmentTitle: string;
+  assignmentDetails?: AssignmentDetails;
+  course: string;
+  status: string;
+  checkerData: CheckerDataEntry[];
+}
+
+interface AssignmentDetails {
+  dueDate: string;
+  lecturer: Lecturer;
+}
+
+interface Lecturer {
+  avatar?: string;
+  fullName: string;
+}
+
+interface CheckerDataEntry {
+  amount: number;
+  title: string;
+  fill: string;
+}
 
 export default function GradingSheet({
   submission,
@@ -14,6 +41,7 @@ export default function GradingSheet({
   onSubmit: (grade: number, feedback: string) => void;
   onCancel: () => void;
 }) {
+  const [isGrading, setIsGrading] = useState<boolean>(false); // State to toggle grading mode
   const [grade, setGrade] = useState<number>(submission.grade || 0);
   const [feedback, setFeedback] = useState<string>(submission.feedback || "");
   const [isEditing, setIsEditing] = useState<boolean>(!!submission.grade); // Check if already graded
@@ -26,6 +54,10 @@ export default function GradingSheet({
       day: "numeric",
       year: "numeric",
     }).format(date);
+  };
+
+  const handleMarkClick = () => {
+    setIsGrading(true); // Activate grading mode
   };
 
   return (
@@ -126,9 +158,7 @@ export default function GradingSheet({
 
               <div className="w-full flex flex-col justify-between gap-2">
                 <p className="font-semibold text-lg">Lecturer Feedback:</p>
-                <p className="text-muted-foreground">
-                  
-                </p>
+                <p className="text-muted-foreground"></p>
               </div>
 
               <hr className="border-t border-gray-300 mt-2" />
@@ -136,98 +166,35 @@ export default function GradingSheet({
 
             {/* Right Section: Chart */}
             <div className="bg-bg1 border border-blue-500 rounded-md flex-1 flex items-center justify-center">
-              {/* <PieChart width={240} height={240}>
+              <PieChart width={240} height={240}>
                 <Pie
-                  data={data}
-                  dataKey="value"
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={70} // creates the "doughnut hole"
+                  data={submission.checkerData}
+                  dataKey="amount"
+                  nameKey="title"
+                  innerRadius={40} // Creates the "doughnut hole"
                   outerRadius={100}
                   paddingAngle={2}
                 >
-                  {data.map((entry, index) => (
-                    <Cell
-                      key={`cell-${index}`}
-                      fill={COLORS[index % COLORS.length]}
-                    />
-                  ))}
+                  {submission.checkerData.map(
+                    (entry: CheckerDataEntry, index: number) => (
+                      <Label
+                        key={`cell-${index}`}
+                        fill={entry.fill}
+                        value={entry.title}
+                        className="p-6"
+                      />
+                    )
+                  )}
                 </Pie>
-                <Tooltip />
-                <Legend
-                  layout="vertical"
-                  verticalAlign="middle"
-                  align="right"
-                  iconType="circle"
-                  wrapperStyle={{ fontSize: "12px", color: "#fff" }}
-                />
-              </PieChart> */}
+              </PieChart>
             </div>
-
-            
           </div>
-        </div>
-      </div>
-      <div className="p-6 bg-white dark:bg-bg2 rounded-lg shadow-md">
-        <h2 className="text-lg font-bold mb-4">
-          Submission Details for {submission.studentName}
-        </h2>
-        <p>
-          <strong>Assignment:</strong> {submission.assignmentTitle}
-        </p>
-        <p>
-          <strong>Course:</strong> {submission.course}
-        </p>
-        <p>
-          <strong>Department:</strong> {submission.department}
-        </p>
-        <p>
-          <strong>Level:</strong> {submission.level}
-        </p>
-        <p>
-          <strong>Submitted At:</strong> {submission.submittedAt}
-        </p>
-        {submission.gradedAt && (
-          <p>
-            <strong>Graded At:</strong> {submission.gradedAt}
-          </p>
-        )}
-
-        {/* Grading Section */}
-        <div className="mt-6">
-          <h3 className="text-lg font-semibold mb-4">
-            {isEditing ? "Edit Grades" : "Mark Submission"}
-          </h3>
-
-          <div className="mt-4">
-            <label className="block font-medium">Grade</label>
-            <input
-              type="number"
-              value={grade}
-              onChange={(e) => setGrade(Number(e.target.value))}
-              className="border rounded p-2 w-full"
-              min="0"
-              max="100"
-              disabled={isEditing && !submission.allowEdit}
-            />
-          </div>
-
-          <div className="mt-4">
-            <label className="block font-medium">Feedback</label>
-            <textarea
-              value={feedback}
-              onChange={(e) => setFeedback(e.target.value)}
-              className="border rounded p-2 w-full"
-              disabled={isEditing && !submission.allowEdit}
-            />
-          </div>
-
           <div className="mt-4 flex gap-2">
             <button
-              onClick={() => onSubmit(grade, feedback)}
+              onClick={handleMarkClick}
               className="bg-blue-500 text-white px-4 py-2 rounded"
             >
-              {isEditing ? "Update Grades" : "Submit Grades"}
+              Mark
             </button>
             <button
               onClick={onCancel}

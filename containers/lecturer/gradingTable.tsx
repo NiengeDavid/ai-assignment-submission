@@ -127,6 +127,9 @@ export default function LectDataTable({
 
   return (
     <div className="w-full flex flex-col gap-4 bg-white dark:bg-bg2 rounded-lg p-4 lg:py-10">
+      <span className="pb-4 font-semibold text-black/50 dark:text-txt1 lg:text-xl cursor-pointer hover:underline">
+        Grades & Feedback
+      </span>
       <div className="overflow-hidden dark:bg-bg2">
         <Table>
           <TableHeader className="dark:bg-bg2">

@@ -13,9 +13,12 @@
   --color-bg1: #1e1e1e;
   --color-bg2: #353838;
   --color-bg3: #00ff40;
-  --color-bg4: #4169E180;
-  --color-bg5: #4BAF2A;
-  --color-txt1: #C1C1C1;
+  --color-bg4: #4169e180;
+  --color-bg5: #4baf2a;
+  --color-txt1: #c1c1c1;
+  --color-ai: #4169E1; /* Green for AI Use */
+  --color-plagiarism: #809BEB; /* Red for Plagiarised Content */
+  --color-human: #A8BAF1;
 }
 
 /*

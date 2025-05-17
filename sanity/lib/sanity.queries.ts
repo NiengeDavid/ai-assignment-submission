@@ -118,14 +118,21 @@ export const lecturerSubmittedAssignmentsQuery = groq`
     _id,
     "assignmentId": assignment->_id,
     "assignmentTitle": assignment->title,
-    "studentId": student->academic.regNumber, // Fixed path for studentId
+    "studentId": student->academic.regNumber,
     "studentName": student->fullName,
     "course": assignment->course,
     "department": assignment->department->name,
     "level": assignment->level,
-    "status": coalesce(status, "pending"), // Default status to "pending" if not set
+    status,
     gradedAt,
     "submittedAt": _createdAt,
+    "checkerData": checkerData[], // Include checkerData
+    "studentComments": studentComments,
+    "submittedFiles": submittedFiles[]{
+      _key,
+      filename,
+      "fileUrl": asset->url
+    },
     "assignmentDetails": assignment->{
       _id,
       title,
@@ -341,32 +348,43 @@ export interface LecturerSubmittedAssignment {
   course: string; // The course associated with the assignment
   department: string; // The department associated with the assignment
   level: string; // The academic level of the assignment
-  status: string; // The status of the submission (e.g., "graded", "pending")
+  status: string; // The status of the submission (e.g., "graded", "submitted")
   gradedAt?: string; // The date and time the submission was graded
   submittedAt: string; // The date and time the submission was created
+  checkerData: {
+    amount: number; // The value for the specific checker metric
+    title: string; // The title of the checker metric (e.g., "AI Use", "Plagiarised Content")
+    fill: string; // The color used for the chart
+  }[]; // Array of checker data
+  studentComments?: string; // Comments provided by the student
+  submittedFiles: {
+    _key: string; // Unique key for the file
+    filename: string; // The name of the submitted file
+    fileUrl: string; // The URL of the submitted file
+  }[]; // Array of submitted files
   assignmentDetails: {
-    _id: string;
-    title: string;
-    assignmentId: string;
-    course: string;
+    _id: string; // The ID of the assignment
+    title: string; // The title of the assignment
+    assignmentId: string; // The unique assignment ID
+    course: string; // The course associated with the assignment
     image?: string; // URL of the assignment cover image
     lecturer?: {
-      _id: string;
-      fullName: string;
+      _id: string; // The ID of the lecturer
+      fullName: string; // The full name of the lecturer
       avatar?: string; // URL of the lecturer's avatar
     };
     department?: {
-      _id: string;
-      name: string;
+      _id: string; // The ID of the department
+      name: string; // The name of the department
     };
-    level: string; // e.g., "100", "200", "300", "400"
-    dueDate: string; // ISO date string
-    question: string; // Assignment question or description
+    level: string; // The academic level of the assignment
+    dueDate: string; // The due date of the assignment
+    question: string; // The assignment question or description
     resources: {
-      displayName: string;
-      fileUrl: string; // URL of the file
-      fileName: string; // Original filename of the file
-      fileSize?: number;
-    }[];
+      displayName: string; // The display name of the resource
+      fileUrl: string; // The URL of the resource file
+      fileName: string; // The original filename of the resource
+      fileSize?: number; // The size of the resource file
+    }[]; // Array of resources
   };
 }
