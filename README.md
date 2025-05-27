@@ -78,7 +78,6 @@ NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=your_clerk_publishable_key
 CLERK_SECRET_KEY=your_clerk_secret_key
 HUGGINGFACE_API_KEY=your_huggingface_api_key
 NEXT_PUBLIC_SOCKET_IO_URL=your_socket_io_url
-# ...any other required variables
 ```
 
 **Start the development server:**
