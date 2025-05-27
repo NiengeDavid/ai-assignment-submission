@@ -91,7 +91,7 @@ Then, open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ## 🖥️ Demo
 
-> **Live site:** _(Add your deployment URL here if live)_
+> **Live site:** _(coming soon)_
 
 ---
 
